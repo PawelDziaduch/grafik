@@ -2365,12 +2365,25 @@ function loginLocal() {
   spReady = true;
 }
 
-// ── INIT ──────────────────────────────────────────────────────────────────────
+// ── INIT ───────────────────────────────────────────────────────────────────────────────
 ensureMechFields();
-syncNoTripsToEntries();
-render();
-updateGeoConflicts();
 setupCityAutocomplete();
+document.getElementById('spConfigBanner').style.display = 'none';
+initMsal();
+
+if (spConfigured) {
+  const tok = sessionStorage.getItem('sp_token');
+  const exp = parseInt(sessionStorage.getItem('sp_token_exp') || '0');
+  if (tok && exp > Date.now()) {
+    hideLoginPage();
+    spLoad();
+  } else {
+    showLoginPage();
+  }
+} else {
+  hideLoginPage();
+  spLoad();
+}
 </script>
 </body>
 </html>
