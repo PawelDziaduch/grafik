@@ -1,0 +1,2219 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wanicki – Grafik Serwisu</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+<style>
+  :root {
+    --bg: #0e1a0c;
+    --surface: #152012;
+    --surface2: #1c2d18;
+    --border: #2a4022;
+    --accent: #FFDE00;
+    --accent2: #4a9c3a;
+    --danger: #ef4444;
+    --success: #367C2B;
+    --warning: #f59e0b;
+    --text: #e8f0e4;
+    --text2: #7a9a72;
+    --jd-green: #367C2B;
+    --jd-yellow: #FFDE00;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  header .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+    color: var(--accent);
+  }
+  header .logo span { color: var(--text); }
+
+  .week-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .week-nav button {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s;
+  }
+  .week-nav button:hover { background: var(--border); }
+
+  .week-label {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text2);
+    min-width: 180px;
+    text-align: center;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 7px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: none;
+    transition: all .15s;
+  }
+  .btn-primary { background: var(--jd-yellow); color: #1a2a00; font-weight:600; }
+  .btn-primary:hover { background: #ffe833; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-danger { background: #3a1a1a; color: var(--danger); border: 1px solid #5a2020; }
+  .btn-danger:hover { background: #5a2020; }
+
+  .main-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr 300px;
+    height: calc(100vh - 57px);
+  }
+
+  /* SIDEBAR - mechanicy */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 16px 0;
+  }
+
+  .sidebar-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text2);
+    padding: 0 16px 12px;
+  }
+
+  .mechanic-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 16px;
+    cursor: pointer;
+    transition: background .12s;
+    border-left: 3px solid transparent;
+  }
+  .mechanic-item:hover { background: var(--surface2); }
+  .mechanic-item.active { background: var(--surface2); border-left-color: var(--accent); }
+
+  .mech-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .mech-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mech-status {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .add-mech-btn {
+    width: calc(100% - 32px);
+    margin: 12px 16px 0;
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--text2);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    padding: 8px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .add-mech-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* GRID */
+  .grid-area {
+    overflow: auto;
+    background: var(--bg);
+  }
+
+  .grid-wrap {
+    min-width: 700px;
+    padding: 20px;
+    padding-top: 0;
+  }
+
+  .grid-header {
+    display: grid;
+    grid-template-columns: 170px repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 4px;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+    padding: 20px 0 4px 0;
+  }
+
+
+
+  .day-header {
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 10px 8px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+
+  .day-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text2);
+  }
+
+  .day-date {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-top: 2px;
+    color: var(--text);
+  }
+
+  .day-header.today { border-color: var(--jd-yellow); background: rgba(255,222,0,0.07); }
+  .day-header.today .day-date { color: var(--jd-yellow); }
+
+  .grid-row {
+    display: grid;
+    grid-template-columns: 170px repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+
+  .row-label {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+
+
+  .row-label .mech-avatar { width: 28px; height: 28px; font-size: 0.7rem; }
+  .row-label .mech-name { font-size: 0.82rem; }
+
+  .cell {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    min-height: 72px;
+    padding: 4px;
+    position: relative;
+    transition: border-color .15s;
+  }
+  .cell:hover { border-color: var(--accent2); }
+  .cell.weekend { background: #161820; }
+
+  .entry {
+    border-radius: 6px;
+    padding: 5px 7px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-bottom: 3px;
+    cursor: pointer;
+    position: relative;
+    line-height: 1.3;
+    transition: filter .15s;
+  }
+  .entry:hover { filter: brightness(1.2); }
+
+  .entry.type-wyjazd { background: #1a3518; border-left: 3px solid var(--jd-green); color: #86d872; }
+  .entry.type-praca { background: #223820; border-left: 3px solid #FFDE00; color: #ffe033; }
+  .entry.type-urlop { background: #3a2a0a; border-left: 3px solid var(--warning); color: #fcd34d; }
+  .entry.type-choroba { background: #3a1a1a; border-left: 3px solid var(--danger); color: #fca5a5; }
+  .entry.conflict { border-left-color: var(--danger) !important; background: #3a1a1a !important; color: #fca5a5 !important; }
+
+  .entry .entry-icon { margin-right: 3px; font-size: 0.8rem; }
+  .entry .entry-city { font-weight: 600; display: block; }
+  .entry .entry-note { color: inherit; opacity: .75; font-size: 0.7rem; }
+
+  .entry .del-btn {
+    position: absolute;
+    top: 3px; right: 3px;
+    background: rgba(0,0,0,.4);
+    border: none;
+    color: var(--text2);
+    border-radius: 4px;
+    width: 16px; height: 16px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    display: none;
+    align-items: center; justify-content: center;
+  }
+  .entry:hover .del-btn { display: flex; }
+  .entry .del-btn:hover { color: var(--danger); }
+
+  .add-cell-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px dashed transparent;
+    color: transparent;
+    border-radius: 6px;
+    padding: 4px;
+    cursor: pointer;
+    font-size: 0.72rem;
+    transition: all .15s;
+    margin-top: 2px;
+  }
+  .cell:hover .add-cell-btn {
+    border-color: var(--border);
+    color: var(--text2);
+  }
+  .add-cell-btn:hover { border-color: var(--accent) !important; color: var(--accent) !important; }
+
+  /* PANEL BOCZNY */
+  .right-panel {
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .panel-section-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 12px;
+  }
+
+  /* KONFLIKTY */
+  .conflict-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .conflict-card {
+    background: #2a1a1a;
+    border: 1px solid #5a2020;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.8rem;
+  }
+
+  .conflict-card .conflict-title {
+    color: var(--danger);
+    font-weight: 600;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .conflict-card .conflict-detail { color: var(--text2); line-height: 1.5; }
+
+  .no-conflicts {
+    background: #0f2a1a;
+    border: 1px solid #1a4a2a;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 0.82rem;
+    color: var(--success);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* STATYSTYKI */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .stat-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--jd-yellow);
+  }
+  .stat-label { font-size: 0.72rem; color: var(--text2); margin-top: 2px; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    width: 380px;
+    max-width: 95vw;
+    box-shadow: 0 24px 60px rgba(0,0,0,.5);
+  }
+
+  .modal h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+
+  .form-group { margin-bottom: 16px; }
+  .form-label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text2);
+    margin-bottom: 6px;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+  }
+
+  .form-input, .form-select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--accent2); }
+  .form-select option { background: var(--surface2); }
+
+  .type-picker {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .type-btn {
+    flex: 1;
+    min-width: 80px;
+    padding: 8px 4px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text2);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    cursor: pointer;
+    text-align: center;
+    transition: all .15s;
+  }
+  .type-btn:hover, .type-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(240,165,0,.1); }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-end;
+  }
+
+  .city-suggestion-item {
+    padding: 9px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background .1s;
+  }
+  .city-suggestion-item:last-child { border-bottom: none; }
+  .city-suggestion-item:hover, .city-suggestion-item.focused { background: var(--surface); }
+  .city-suggestion-item .sug-name { font-weight: 600; font-size: 0.85rem; color: var(--text); }
+  .city-suggestion-item .sug-meta { font-size: 0.72rem; color: var(--text2); margin-top: 1px; }
+  .city-suggestion-item .sug-type { display:inline-block;font-size:0.65rem;padding:1px 5px;border-radius:4px;margin-left:5px;background:var(--surface2);color:var(--text2); }
+
+  .conflict-warn {
+    background: #2a1a1a;
+    border: 1px solid var(--danger);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.8rem;
+    color: #fca5a5;
+    margin-bottom: 12px;
+    display: none;
+  }
+  .conflict-warn.show { display: block; }
+
+  /* NAV TABS */
+  .main-nav {
+    display: flex;
+    gap: 4px;
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 4px;
+  }
+  .nav-tab {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 7px 20px;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .nav-tab:hover { color: var(--text); background: rgba(255,255,255,.05); }
+  .nav-tab.active { background: var(--jd-green); color: #fff; font-weight: 600; }
+
+  /* MECHANIC CARDS */
+  .mech-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    transition: border-color .15s, transform .15s;
+    cursor: grab;
+    position: relative;
+  }
+  .mech-card:active { cursor: grabbing; }
+  .mech-card.dragging { opacity: .5; transform: scale(.98); }
+  .mech-card.drag-over { border-color: var(--jd-yellow); background: rgba(255,222,0,.05); }
+  .mech-card:hover { border-color: var(--jd-green); }
+
+  .mech-card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .mech-card-avatar {
+    width: 48px; height: 48px; border-radius: 50%;
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .mech-card-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; }
+  .mech-card-spec { font-size: 0.78rem; color: var(--text2); margin-top: 2px; }
+
+  .mech-card-info { display: flex; flex-direction: column; gap: 5px; font-size: 0.8rem; color: var(--text2); }
+  .mech-card-info span { display: flex; align-items: center; gap: 6px; }
+  .mech-card-info span b { color: var(--text); }
+
+  .mech-card-vacations { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .vacation-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(245,158,11,.12); border: 1px solid rgba(245,158,11,.3);
+    color: #fcd34d; border-radius: 6px; padding: 3px 8px; font-size: 0.72rem;
+    margin: 3px 3px 3px 0;
+  }
+
+  .mech-card-actions {
+    position: absolute; top: 12px; right: 12px;
+    display: flex; gap: 6px; opacity: 0; transition: opacity .15s;
+  }
+  .mech-card:hover .mech-card-actions { opacity: 1; }
+
+  .drag-handle {
+    position: absolute; top: 12px; left: 14px;
+    color: var(--border); font-size: 1rem; cursor: grab;
+    opacity: 0; transition: opacity .15s;
+  }
+  .mech-card:hover .drag-handle { opacity: 1; }
+
+  /* VACATION ROWS */
+  .vacation-row {
+    display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: center;
+    background: var(--surface2); border-radius: 8px; padding: 8px 10px;
+  }
+  .vacation-row input[type=date] {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); font-family: 'DM Sans',sans-serif; font-size: 0.82rem;
+    padding: 6px 10px; outline: none; width: 100%;
+  }
+  .vacation-row input[type=date]:focus { border-color: var(--jd-green); }
+  .vacation-row .rm-vac {
+    background: none; border: none; color: var(--text2); cursor: pointer;
+    font-size: 1rem; padding: 2px 6px; border-radius: 4px;
+  }
+  .vacation-row .rm-vac:hover { color: var(--danger); }
+
+  /* HOLIDAYS — full column effect */
+  .day-header.holiday {
+    border-color: #a855f7;
+    background: rgba(168,85,247,.15);
+    box-shadow: 0 4px 0 -1px rgba(168,85,247,.15), 0 0 0 1px #a855f7;
+  }
+  .day-header.holiday .day-name { color: #c084fc; }
+  .day-header.holiday .day-date { color: #e9d5ff; font-weight: 600; }
+  .day-header .holiday-name {
+    font-size: 0.6rem; color: #c084fc; margin-top: 3px;
+    white-space: normal; line-height: 1.3; word-break: break-word;
+  }
+  .cell.holiday {
+    background: rgba(168,85,247,.08);
+    border-color: #a855f7;
+    box-shadow: 0 -3px 0 rgba(168,85,247,.15), 0 3px 0 rgba(168,85,247,.15);
+  }
+  .cell.holiday:hover { border-color: #c084fc; }
+  .cell.holiday .add-cell-btn { display: none !important; }
+
+  .priority-btn {
+    width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--surface2); cursor: pointer; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s; position: relative;
+  }
+  .priority-btn:hover { transform: scale(1.1); }
+  .priority-btn.active { border-width: 2px; }
+  .priority-btn[data-p="low"].active    { border-color: #22c55e; background: rgba(34,197,94,.15); }
+  .priority-btn[data-p="normal"].active { border-color: #3b82f6; background: rgba(59,130,246,.15); }
+  .priority-btn[data-p="high"].active   { border-color: #f59e0b; background: rgba(245,158,11,.15); }
+  .priority-btn[data-p="urgent"].active { border-color: #ef4444; background: rgba(239,68,68,.15); }
+
+  .priority-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    display: inline-block; margin-right: 3px; vertical-align: middle;
+  }
+  .priority-dot.low    { background: #22c55e; }
+  .priority-dot.normal { background: #3b82f6; }
+  .priority-dot.high   { background: #f59e0b; }
+  .priority-dot.urgent { background: #ef4444; box-shadow: 0 0 5px #ef4444; }
+
+  .sync-status {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 0.72rem; color: var(--text2);
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 9px; white-space: nowrap;
+  }
+  .sync-status.ok    { color: #4ade80; border-color: rgba(74,222,128,.3); background: rgba(74,222,128,.07); }
+  .sync-status.error { color: #f87171; border-color: rgba(248,113,113,.3); background: rgba(248,113,113,.07); }
+  .sync-status.saving{ color: #fbbf24; border-color: rgba(251,191,36,.3);  background: rgba(251,191,36,.07); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 1100px) {
+    .main-layout { grid-template-columns: 180px 1fr 0; }
+    .right-panel { display: none; }
+  }
+
+  /* LIGHT MODE */
+  body.light-mode {
+    --bg: #f0f4ee;
+    --surface: #ffffff;
+    --surface2: #e8f0e4;
+    --border: #c8dcc0;
+    --text: #1a2e14;
+    --text2: #5a7a52;
+    --jd-green: #2d6b24;
+    --accent: #d4a800;
+    --jd-yellow: #d4a800;
+    --accent2: #2d6b24;
+    --success: #2d6b24;
+  }
+  body.light-mode header { box-shadow: 0 1px 8px rgba(0,0,0,.08); }
+  body.light-mode .cell.weekend { background: #e4ede0; }
+  body.light-mode .entry.type-wyjazd { background: #d4edcc; border-left-color: var(--jd-green); color: #1a4a12; }
+  body.light-mode .entry.type-praca  { background: #fff9c4; border-left-color: #d4a800; color: #5a4400; }
+  body.light-mode .entry.type-urlop  { background: #fef3c7; border-left-color: #f59e0b; color: #78350f; }
+  body.light-mode .entry.type-choroba{ background: #fee2e2; border-left-color: #ef4444; color: #7f1d1d; }
+  body.light-mode .conflict-card { background: #fee2e2; border-color: #fca5a5; }
+  body.light-mode .no-conflicts { background: #dcfce7; border-color: #86efac; }
+  body.light-mode .stat-card { background: #e8f0e4; }
+  body.light-mode .nav-tab.active { background: var(--jd-green); color: #fff; }
+  body.light-mode .day-header.today { background: rgba(212,168,0,.12); }
+  body.light-mode .mech-card { background: #fff; }
+  body.light-mode .modal { background: #fff; }
+  body.light-mode .form-input, body.light-mode .form-select { background: #f0f4ee; color: var(--text); }
+  body.light-mode ::-webkit-scrollbar-thumb { background: #c8dcc0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo" style="display:flex;align-items:center;gap:14px">
+    <!-- John Deere official-style logo -->
+    <svg width="52" height="52" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="200" rx="12" fill="#FFDE00"/>
+      <!-- Leaping deer silhouette - accurate JD style -->
+      <g fill="#367C2B">
+        <!-- Body - main torso -->
+        <path d="M55 130 C55 130 45 110 50 95 C55 80 70 75 85 78 C100 81 115 88 125 95 C135 102 140 112 135 122 C130 132 118 135 105 133 C92 131 78 132 68 130 Z"/>
+        <!-- Neck -->
+        <path d="M118 90 C120 82 126 75 132 70 C136 67 140 68 138 74 C136 80 130 85 125 90 Z"/>
+        <!-- Head -->
+        <path d="M130 68 C132 60 138 54 145 52 C150 50 153 53 151 58 C149 63 143 67 137 69 Z"/>
+        <!-- Snout/nose -->
+        <path d="M148 55 C152 53 156 54 157 57 C158 60 155 62 151 61 Z"/>
+        <!-- Eye -->
+        <circle cx="147" cy="56" r="2.5"/>
+        <!-- Ear -->
+        <path d="M138 52 C140 45 145 42 148 44 C150 46 148 51 144 53 Z"/>
+        <!-- Antler left -->
+        <path d="M140 50 C138 42 136 32 132 24 C130 20 128 22 129 26 C130 30 132 34 131 38 C130 42 127 44 128 40 C129 36 127 30 124 25 C122 21 119 22 120 26 C121 30 124 36 123 42 C122 46 120 48 121 45 C122 42 120 36 117 32 C115 28 113 30 114 34 L117 44 L122 50 L132 52 Z"/>
+        <!-- Antler right (partial, behind) -->
+        <path d="M145 48 C147 40 150 32 154 26 C156 22 158 24 157 28 C156 32 153 37 154 42 C155 45 157 46 155 43 C153 40 154 34 156 30 C158 26 160 28 159 32 L156 44 L148 50 Z"/>
+        <!-- Front right leg (raised/leaping) -->
+        <path d="M120 128 C122 120 126 112 128 104 C130 98 128 94 125 96 C122 98 120 106 119 114 C118 120 118 126 120 128 Z"/>
+        <!-- Front left leg -->
+        <path d="M105 133 C105 125 104 116 102 108 C100 101 97 98 95 101 C93 104 94 112 96 120 C98 127 101 132 105 133 Z"/>
+        <!-- Back right leg (extended back) -->
+        <path d="M68 130 C64 122 58 114 54 107 C51 102 49 103 50 108 C51 113 55 120 58 127 C61 132 65 134 68 130 Z"/>
+        <!-- Back left leg -->
+        <path d="M80 132 C78 124 75 115 72 108 C70 103 67 103 68 108 C69 113 71 121 73 128 C75 133 78 135 80 132 Z"/>
+        <!-- Tail -->
+        <path d="M57 100 C52 95 48 88 50 83 C52 78 57 80 60 86 C63 92 62 98 57 100 Z"/>
+        <!-- Belly line for shape -->
+        <path d="M58 122 C65 118 78 116 92 117 C106 118 118 122 125 126 C118 130 105 132 90 131 C75 130 63 127 58 122 Z" fill="#2d6b24"/>
+      </g>
+    </svg>
+    <div style="margin-left:2px">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.25rem;letter-spacing:0.02em;color:#ffffff;line-height:1.1">WANICKI</div>
+      <div style="font-size:0.68rem;color:#7a9a72;letter-spacing:0.08em;text-transform:uppercase;margin-top:2px">Oddział Wola Piasecka</div>
+    </div>
+  </div>
+  <div class="week-nav">
+    <button id="prevWeek">&#8592;</button>
+    <div class="week-label" id="weekLabel"></div>
+    <button id="nextWeek">&#8594;</button>
+    <button class="btn btn-secondary" id="todayBtn" style="margin-left:4px;font-size:0.78rem;padding:5px 12px">Dziś</button>
+    <button class="btn btn-secondary" id="themeToggleBtn" onclick="toggleTheme()" style="margin-left:4px;font-size:0.78rem;padding:5px 10px" title="Jasny / ciemny motyw">🌙</button>
+  </div>
+  <nav class="main-nav" id="mainNav">
+    <button class="nav-tab active" data-page="schedule" onclick="switchPage('schedule')">📅 Grafik</button>
+    <button class="nav-tab" data-page="mechanics" onclick="switchPage('mechanics')">👷 Mechanicy</button>
+  </nav>
+  <div class="header-actions" id="scheduleActions" style="display:flex;align-items:center;gap:8px">
+    <div id="syncStatus" class="sync-status"><span id="syncIcon">&#x23F3;</span><span id="syncText">Inicjalizacja...</span></div>
+    <button class="btn btn-secondary" onclick="spSave(true)" title="Zapisz teraz do SharePoint" style="font-size:0.75rem;padding:4px 9px">&#x1F4BE;</button>
+    <button class="btn btn-secondary" id="addMechBtn">+ Mechanik</button>
+    <button class="btn btn-primary" id="addEntryBtn">+ Wpis</button>
+  </div>
+  <div class="header-actions" id="mechActions" style="display:none;align-items:center;gap:8px">
+    <div id="syncStatus2" class="sync-status"><span id="syncIcon2">&#x23F3;</span><span id="syncText2">Inicjalizacja...</span></div>
+    <button class="btn btn-primary" onclick="openNewMechModal()">+ Dodaj mechanika</button>
+  </div>
+</header>
+<div id="spConfigBanner" style="background:#7c2d12;color:#fde8d8;padding:7px 20px;font-size:0.78rem;text-align:center;border-bottom:1px solid #c2410c">
+  &#x2699;&#xFE0F; <strong>Wymagana konfiguracja SharePoint:</strong>
+  Ustaw <code style="background:rgba(0,0,0,.3);padding:1px 5px;border-radius:3px">SP_SITE_URL</code>
+  i <code style="background:rgba(0,0,0,.3);padding:1px 5px;border-radius:3px">SP_LIST_NAME</code> w pliku HTML (na g&oacute;rze sekcji &lt;script&gt;).
+  <button onclick="document.getElementById('spConfigBanner').style.display='none'" style="margin-left:10px;background:none;border:1px solid #fde8d8;color:#fde8d8;border-radius:4px;padding:1px 7px;cursor:pointer">&#x2715;</button>
+</div>
+
+<div id="page-schedule">
+<div class="main-layout">
+  <div class="sidebar">
+    <div class="sidebar-title">Mechanicy</div>
+    <div id="mechList"></div>
+    <button class="add-mech-btn" id="addMechSidebar">+ Dodaj mechanika</button>
+  </div>
+
+  <div class="grid-area">
+    <div class="grid-wrap">
+      <div class="grid-header" id="gridHeader"></div>
+      <div id="gridBody"></div>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <div>
+      <div class="panel-section-title">⚠ Konflikty wyjazdów <span style="font-size:0.65rem;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:1px 5px;margin-left:4px">promień 20 km</span></div>
+      <div class="conflict-list" id="conflictList"></div>
+    </div>
+    <div>
+      <div class="panel-section-title">📊 Statystyki tygodnia</div>
+      <div class="stats-grid" id="statsGrid"></div>
+    </div>
+    <div>
+      <div class="panel-section-title">💡 Optymalizacja tras</div>
+      <div id="optimList" style="display:flex;flex-direction:column;gap:8px;font-size:0.8rem;"></div>
+    </div>
+    <div>
+      <div class="panel-section-title">🚗 Wyjazdy w tym tygodniu</div>
+      <div id="tripList" style="display:flex;flex-direction:column;gap:6px;font-size:0.8rem;"></div>
+    </div>
+  </div>
+</div>
+</div><!-- /page-schedule -->
+
+<!-- PAGE: MECHANICY -->
+<div id="page-mechanics" style="display:none;padding:28px;max-width:1100px;margin:0 auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+    <div>
+      <h2 style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--text)">Zarządzanie mechanikami</h2>
+      <p style="color:var(--text2);font-size:0.85rem;margin-top:4px">Przeciągnij karty aby zmienić kolejność</p>
+    </div>
+  </div>
+  <div id="mechCardsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px"></div>
+</div>
+
+<!-- MODAL EDYTUJ MECHANIKA -->
+<div class="modal-overlay" id="editMechModal">
+  <div class="modal" style="width:460px">
+    <h3 id="editMechTitle">Edytuj mechanika</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Imię i Nazwisko</label>
+        <input class="form-input" id="emName" placeholder="np. Jan Kowalski">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Specjalizacja</label>
+        <input class="form-input" id="emSpec" placeholder="np. Elektryka">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
+          <input type="checkbox" id="emNoTrips" style="width:16px;height:16px;accent-color:var(--jd-green);cursor:pointer">
+          <span style="font-size:0.85rem;color:var(--text)">Nie jeździ na wyjazdy — uzupełniaj tydzień jako <b>Praca w warsztacie</b></span>
+        </label>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Telefon</label>
+        <input class="form-input" id="emPhone" placeholder="+48 500 000 000" type="tel">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Email</label>
+        <input class="form-input" id="emEmail" placeholder="jan.kowalski@wanicki.pl" type="email">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Notatka</label>
+        <input class="form-input" id="emNote" placeholder="np. uprawnienia SEP, prawo jazdy kat. C">
+      </div>
+    </div>
+    <div style="margin-top:4px">
+      <label class="form-label" style="margin-bottom:10px;display:block">Planowane urlopy</label>
+      <div id="vacationList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+      <button class="btn btn-secondary" style="font-size:0.78rem;width:100%" onclick="addVacationRow()">+ Dodaj urlop</button>
+    </div>
+    <div class="modal-actions" style="margin-top:20px;justify-content:space-between">
+      <button class="btn btn-danger" id="emDeleteBtn">🗑 Usuń mechanika</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" onclick="closeEditMechModal()">Anuluj</button>
+        <button class="btn btn-primary" onclick="saveEditMech()">Zapisz</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DODAJ WPIS -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">Nowy wpis</h3>
+    <div class="conflict-warn" id="conflictWarn"></div>
+    <div class="form-group">
+      <label class="form-label">Mechanik</label>
+      <select class="form-select" id="fMech"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Dzień</label>
+      <select class="form-select" id="fDay"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Typ</label>
+      <div class="type-picker" id="typePicker"></div>
+    </div>
+    <div class="form-group" id="cityGroup">
+      <label class="form-label">Miejscowość docelowa</label>
+      <div style="position:relative" id="cityPickerWrap">
+        <input class="form-input" id="fCitySearch" placeholder="Wpisz nazwę miejscowości..." autocomplete="off" style="padding-right:36px">
+        <span id="citySearchSpinner" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:0.8rem;color:var(--text2)">⏳</span>
+        <div id="citySuggestions" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;z-index:2000;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.4)"></div>
+      </div>
+      <div id="citySelected" style="display:none;margin-top:6px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:8px;padding:8px 12px;font-size:0.82rem;display:none;align-items:center;gap:8px">
+        <span style="flex:1" id="citySelectedLabel"></span>
+        <button onclick="clearCitySelection()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:0.9rem;padding:0 2px">✕</button>
+      </div>
+      <input type="hidden" id="fCity">
+      <input type="hidden" id="fCityLat">
+      <input type="hidden" id="fCityLon">
+    </div>
+    <div class="form-group" id="orderGroup" style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end">
+      <div>
+        <label class="form-label">Numer zlecenia</label>
+        <input class="form-input" id="fOrder" placeholder="np. ZL50/25/1250" autocomplete="off" style="font-family:'DM Sans',monospace;letter-spacing:0.03em">
+      </div>
+      <div>
+        <label class="form-label">Priorytet</label>
+        <div id="priorityPicker" style="display:flex;gap:5px"></div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notatka (opcjonalnie)</label>
+      <input class="form-input" id="fNote" placeholder="np. przegląd agregatu">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="modalCancel">Anuluj</button>
+      <button class="btn btn-primary" id="modalSave">Zapisz</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DODAJ MECHANIKA -->
+<div class="modal-overlay" id="mechModalOverlay">
+  <div class="modal">
+    <h3>Nowy mechanik</h3>
+    <div class="form-group">
+      <label class="form-label">Imię i Nazwisko</label>
+      <input class="form-input" id="mName" placeholder="np. Jan Kowalski">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Specjalizacja</label>
+      <input class="form-input" id="mSpec" placeholder="np. elektryka, hydraulika">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="mechModalCancel">Anuluj</button>
+      <button class="btn btn-primary" id="mechModalSave">Dodaj</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────────────────────────
+
+const COLORS = [
+  ['#f0a500','#1a1200'],['#3b82f6','#0a1a30'],['#22c55e','#0a2010'],
+  ['#a78bfa','#1a1030'],['#f472b6','#30101a'],['#34d399','#0a2018'],
+  ['#fb923c','#2a1008'],['#60a5fa','#0a1828'],['#c084fc','#1a0828'],
+  ['#f87171','#280a0a'],['#4ade80','#0a2010'],['#fbbf24','#281800'],
+  ['#38bdf8','#08182a'],['#e879f9','#280a28'],['#a3e635','#182008'],
+];
+
+let mechanics = [
+  {id:1,  name:'Tomasz Sagan',          spec:'Mechanik', phone:'', email:'', note:'', vacations:[]},
+  {id:2,  name:'Michał Jurek',          spec:'Mechanik', phone:'', email:'', note:'', vacations:[]},
+  {id:3,  name:'Paweł Lipiec',          spec:'Mechanik', phone:'', email:'', note:'', vacations:[]},
+  {id:4,  name:'Piotr Gustaw',          spec:'Mechanik', phone:'', email:'', note:'', vacations:[]},
+  {id:5,  name:'Dawid Morokiszka',      spec:'Mechanik', phone:'', email:'', note:'', vacations:[]},
+  {id:6,  name:'Łukasz Buda',           spec:'Mechanik', phone:'', email:'', note:'', vacations:[]},
+  {id:7,  name:'Kamil Tarnas',          spec:'Mechanik', phone:'', email:'', note:'', vacations:[]},
+  {id:8,  name:'Dawid Skorek',          spec:'Mechanik', phone:'', email:'', note:'', vacations:[]},
+  {id:9,  name:'Przemysław Szabała',    spec:'Mechanik', phone:'', email:'', note:'', vacations:[]},
+  {id:10, name:'Kamil Stefaniak',       spec:'Mechanik', phone:'', email:'', note:'', vacations:[]},
+  {id:11, name:'Bartłomiej Jasiński',   spec:'Mechanik', phone:'', email:'', note:'', vacations:[]},
+  {id:12, name:'Przemysław Wójcik',     spec:'Pomocnik',  phone:'', email:'', note:'', vacations:[]},
+  {id:13, name:'Łukasz Olcha',          spec:'Pomocnik',  phone:'', email:'', note:'', vacations:[]},
+  {id:14, name:'Mateusz Cenian',        spec:'Pomocnik',  phone:'', email:'', note:'', vacations:[]},
+];
+
+let entries = [];
+
+function e() { return Math.random().toString(36).slice(2); }
+
+const TYPES = [
+  {key:'wyjazd', label:'🚗 Wyjazd', icon:'🚗'},
+  {key:'praca',  label:'🔧 Praca w warsztacie', icon:'🔧'},
+  {key:'urlop',  label:'🌴 Urlop', icon:'🌴'},
+  {key:'choroba',label:'🤒 Choroba', icon:'🤒'},
+];
+
+const DAYS_PL = ['Pon','Wt','Śr','Czw','Pt','Sob','Nd'];
+const DAYS_FULL = ['Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota','Niedziela'];
+
+let weekOffset = 0;
+let editingEntry = null;
+let prefillMech = null, prefillDay = null;
+
+// ── POLISH HOLIDAYS ──────────────────────────────────────────────────────────
+
+function easterDate(year) {
+  // Anonymous Gregorian algorithm
+  const a = year % 19, b = Math.floor(year/100), c = year % 100;
+  const d = Math.floor(b/4), e = b % 4, f = Math.floor((b+8)/25);
+  const g = Math.floor((b-f+1)/3), h = (19*a+b-d-g+15) % 30;
+  const i = Math.floor(c/4), k = c % 4;
+  const l = (32+2*e+2*i-h-k) % 7;
+  const m = Math.floor((a+11*h+22*l)/451);
+  const month = Math.floor((h+l-7*m+114)/31); // 1-based
+  const day   = ((h+l-7*m+114) % 31) + 1;
+  return new Date(year, month-1, day);
+}
+
+function getPolishHolidays(year) {
+  const easter = easterDate(year);
+  const easterMonday = new Date(easter); easterMonday.setDate(easter.getDate()+1);
+  const whitSunday  = new Date(easter); whitSunday.setDate(easter.getDate()+49);
+  const corpusChristi = new Date(easter); corpusChristi.setDate(easter.getDate()+60);
+
+  const fixed = [
+    [1,  1,  'Nowy Rok'],
+    [1,  6,  'Trzech Króli'],
+    [5,  1,  'Święto Pracy'],
+    [5,  3,  'Święto Konstytucji'],
+    [8,  15, 'Wniebowzięcie NMP'],
+    [11, 1,  'Wszystkich Świętych'],
+    [11, 11, 'Święto Niepodległości'],
+    [12, 25, 'Boże Narodzenie'],
+    [12, 26, 'Drugi dzień Bożego Narodzenia'],
+  ];
+  const holidays = {};
+  fixed.forEach(([m,d,name]) => {
+    const key = `${year}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    holidays[key] = name;
+  });
+  const movable = [
+    [easter,       'Wielkanoc'],
+    [easterMonday, 'Poniedziałek Wielkanocny'],
+    [whitSunday,   'Zielone Świątki'],
+    [corpusChristi,'Boże Ciało'],
+  ];
+  movable.forEach(([date, name]) => {
+    const key = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+    holidays[key] = name;
+  });
+  return holidays;
+}
+
+// Cache holidays per year
+const holidayCache = {};
+function getHolidays(year) {
+  if (!holidayCache[year]) holidayCache[year] = getPolishHolidays(year);
+  return holidayCache[year];
+}
+
+function dateKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// ── WEEK UTILS ────────────────────────────────────────────────────────────────
+
+function getMonday(offset=0) {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - (day === 0 ? 6 : day-1);
+  d.setDate(diff + offset*7);
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function getWeekDates(offset=0) {
+  const mon = getMonday(offset);
+  return Array.from({length:7}, (_,i) => {
+    const d = new Date(mon);
+    d.setDate(d.getDate()+i);
+    return d;
+  });
+}
+
+function fmtDate(d) {
+  return d.getDate()+'.'+(d.getMonth()+1).toString().padStart(2,'0');
+}
+
+function isToday(d) {
+  const n = new Date();
+  return d.getDate()===n.getDate() && d.getMonth()===n.getMonth() && d.getFullYear()===n.getFullYear();
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+
+function getColor(mechId) {
+  const idx = mechanics.findIndex(m=>m.id===mechId);
+  return COLORS[idx % COLORS.length];
+}
+
+function initials(name) {
+  return name.split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase();
+}
+
+function renderSidebar() {
+  const list = document.getElementById('mechList');
+  list.innerHTML = mechanics.map(m => {
+    const [bg, fg] = getColor(m.id);
+    const trips = entries.filter(en=>en.mechId===m.id && en.type==='wyjazd').length;
+    return `<div class="mechanic-item" data-id="${m.id}">
+      <div class="mech-avatar" style="background:${bg};color:${fg}">${initials(m.name)}</div>
+      <div>
+        <div class="mech-name">${m.name}</div>
+        <div style="font-size:0.68rem;color:var(--text2);margin-top:1px">${m.spec==='Pomocnik'?'<span style="font-size:0.6rem;background:rgba(255,222,0,.15);color:var(--jd-yellow);border:1px solid rgba(255,222,0,.3);border-radius:3px;padding:1px 5px">Pomocnik</span>':m.spec}</div>
+      </div>
+      <div class="mech-status" style="background:${trips>0?'var(--accent2)':'var(--success)'}"></div>
+    </div>`;
+  }).join('');
+}
+
+function renderGrid() {
+  const dates = getWeekDates(weekOffset);
+  const mon = dates[0], sun = dates[6];
+  document.getElementById('weekLabel').textContent =
+    `${fmtDate(mon)} – ${fmtDate(sun)} ${sun.getFullYear()}`;
+
+  // Header
+  const hdr = document.getElementById('gridHeader');
+  hdr.innerHTML = `<div></div>` + dates.map((d,i)=>{
+    const hKey = dateKey(d);
+    const hName = getHolidays(d.getFullYear())[hKey] || null;
+    const isHol = !!hName;
+    return `<div class="day-header ${isToday(d)?'today':''} ${isHol?'holiday':''}">
+      <div class="day-name">${DAYS_PL[i]}</div>
+      <div class="day-date">${fmtDate(d)}</div>
+      ${hName ? `<div class="holiday-name" title="${hName}">🎉 ${hName}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  // Body
+  // Mark holiday columns on body rows via data attribute
+  const holidayCols = dates.map((d,i) => !!getHolidays(d.getFullYear())[dateKey(d)]);
+
+  const body = document.getElementById('gridBody');
+  body.innerHTML = mechanics.map(m => {
+    const [bg, fg] = getColor(m.id);
+    const cells = Array.from({length:7}, (_,dayIdx) => {
+      const dayEntries = entries.filter(en=>en.mechId===m.id && en.day===dayIdx && (en.week===undefined || en.week===weekOffset));
+      const cellDate = dates[dayIdx];
+      const cellHoliday = cellDate ? (getHolidays(cellDate.getFullYear())[dateKey(cellDate)] || null) : null;
+      const isWeekend = dayIdx >= 5;
+      const classes = ['cell', isWeekend?'weekend':'', cellHoliday?'holiday':''].filter(Boolean).join(' ');
+      return `<div class="${classes}" data-mech="${m.id}" data-day="${dayIdx}" title="${cellHoliday||''}">
+        ${dayEntries.map(en => {
+          const isConflict = geoConflictIds.has(en.id);
+          const icon = TYPES.find(t=>t.key===en.type)?.icon||'';
+          return `<div class="entry type-${en.type} ${isConflict?'conflict':''}" data-id="${en.id}" title="${isConflict?'⚠ Konflikt wyjazdu!':''}">
+            <button class="del-btn" onclick="deleteEntry('${en.id}',event)">✕</button>
+            ${en.priority && en.priority!=="normal" ? `<span class="priority-dot ${en.priority}"></span>` : ""}
+            <span class="entry-icon">${icon}</span>
+            ${en.city ? `<span class="entry-city">${en.city}</span>` : ''}
+            ${en.order ? `<span class="entry-note" style="font-weight:600;opacity:1;color:var(--jd-yellow)">📋 ${en.order}</span>` : ''}
+            ${en.note ? `<span class="entry-note">${en.note}</span>` : ''}
+          </div>`;
+        }).join('')}
+        <button class="add-cell-btn" onclick="openModal(${m.id},${dayIdx})">+ dodaj</button>
+      </div>`;
+    }).join('');
+    return `<div class="grid-row">
+      <div class="row-label">
+        <div class="mech-avatar" style="background:${bg};color:${fg}">${initials(m.name)}</div>
+        <div>
+          <div class="mech-name" style="font-size:0.78rem">${m.name}</div>
+          <div style="font-size:0.65rem;color:var(--text2);margin-top:1px">${m.spec==='Pomocnik'?'<span style="font-size:0.58rem;background:rgba(255,222,0,.15);color:var(--jd-yellow);border:1px solid rgba(255,222,0,.3);border-radius:3px;padding:1px 4px">Pomocnik</span>':m.spec}</div>
+        </div>
+      </div>
+      ${cells}
+    </div>`;
+  }).join('');
+}
+
+function getConflicts() { return getConflictDetails(); }
+
+// ── GEO CACHE & DISTANCE ─────────────────────────────────────────────────────
+
+const geoCache = {}; // city -> {lat, lon} or null
+
+async function geocode(city) {
+  const key = city.toLowerCase().trim();
+  if (key in geoCache) return geoCache[key];
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1&countrycodes=pl`;
+    const res = await fetch(url, {headers:{'Accept-Language':'pl'}});
+    const data = await res.json();
+    if (data && data[0]) {
+      geoCache[key] = {lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon)};
+    } else {
+      geoCache[key] = null;
+    }
+  } catch(e) {
+    geoCache[key] = null;
+  }
+  return geoCache[key];
+}
+
+function haversine(a, b) {
+  const R = 6371;
+  const dLat = (b.lat - a.lat) * Math.PI / 180;
+  const dLon = (b.lon - a.lon) * Math.PI / 180;
+  const x = Math.sin(dLat/2)**2 + Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
+}
+
+const CONFLICT_RADIUS_KM = 20;
+
+// Geo conflicts are stored here after async check
+let geoConflictIds = new Set();
+let geoConflictDetails = []; // [{ids, day, cities, mechs, dist}]
+
+async function updateGeoConflicts() {
+  const trips = entries.filter(en => en.type==='wyjazd' && en.city && (en.week===undefined || en.week===weekOffset));
+  // Geocode all unique cities
+  const cities = [...new Set(trips.map(en=>en.city.toLowerCase().trim()))];
+  await Promise.all(cities.map(c => geocode(c)));
+
+  const newIds = new Set();
+  const details = [];
+
+  for (let i=0; i<trips.length; i++) {
+    for (let j=i+1; j<trips.length; j++) {
+      const a = trips[i], b = trips[j];
+      if (a.day !== b.day) continue;
+      const gA = geoCache[a.city.toLowerCase().trim()];
+      const gB = geoCache[b.city.toLowerCase().trim()];
+      let conflict = false;
+      let dist = null;
+      if (gA && gB) {
+        dist = haversine(gA, gB);
+        conflict = dist <= CONFLICT_RADIUS_KM;
+      } else {
+        // fallback: exact city name match
+        conflict = similarCityFallback(a.city, b.city);
+      }
+      if (conflict) {
+        newIds.add(a.id); newIds.add(b.id);
+        const existing = details.find(d => d.ids.includes(a.id) || d.ids.includes(b.id));
+        const mA = mechanics.find(m=>m.id===a.mechId)?.name;
+        const mB = mechanics.find(m=>m.id===b.mechId)?.name;
+        if (existing) {
+          if (!existing.ids.includes(a.id)) existing.ids.push(a.id);
+          if (!existing.ids.includes(b.id)) existing.ids.push(b.id);
+          if (!existing.mechs.includes(mA)) existing.mechs.push(mA);
+          if (!existing.mechs.includes(mB)) existing.mechs.push(mB);
+        } else {
+          details.push({
+            ids:[a.id,b.id], day:a.day,
+            cities:[a.city, b.city],
+            mechs:[mA, mB],
+            dist: dist ? Math.round(dist) : null
+          });
+        }
+      }
+    }
+  }
+  geoConflictIds = newIds;
+  geoConflictDetails = details;
+  render();
+}
+
+function similarCityFallback(a, b) {
+  if (!a||!b) return false;
+  const normalize = s => s.toLowerCase().trim().split(/[\s,]+/)[0];
+  return normalize(a)===normalize(b);
+}
+
+function similarCity(a, b) {
+  return similarCityFallback(a, b);
+}
+
+function getConflictIds() { return geoConflictIds; }
+function getConflictDetails() { return geoConflictDetails; }
+
+function renderRightPanel() {
+  // Konflikty
+  const conflicts = getConflicts();
+  const cl = document.getElementById('conflictList');
+  if (conflicts.length===0) {
+    cl.innerHTML = `<div class="no-conflicts">✅ Brak konfliktów wyjazdów</div>`;
+  } else {
+    cl.innerHTML = conflicts.map(c=>`
+      <div class="conflict-card">
+        <div class="conflict-title">⚠ ${DAYS_FULL[c.day]}</div>
+        <div class="conflict-detail">
+          <strong>${c.cities[0]}${c.cities[1] && c.cities[1].toLowerCase()!==c.cities[0].toLowerCase() ? ' / '+c.cities[1] : ''}</strong><br>
+          ${c.mechs.join(' i ')}<br>
+          ${c.dist !== null ? `<span style="color:var(--warning)">~${c.dist} km od siebie</span>` : 'podobne miejsce'}
+        </div>
+      </div>`).join('');
+  }
+
+  // Stats
+  const wEntries = entries.filter(e=>e.week===undefined || e.week===weekOffset);
+  const trips = wEntries.filter(e=>e.type==='wyjazd').length;
+  const work  = wEntries.filter(e=>e.type==='praca').length;
+  const off   = wEntries.filter(e=>e.type==='urlop').length;
+  const sick  = wEntries.filter(e=>e.type==='choroba').length;
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${trips}</div><div class="stat-label">Wyjazdy</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--success)">${work}</div><div class="stat-label">Praca w warsztacie</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--warning)">${off}</div><div class="stat-label">Urlopy</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--danger)">${sick}</div><div class="stat-label">Choroby</div></div>
+  `;
+
+  // ── Optymalizacja tras ──────────────────────────────────────────────────────
+  // Find cities visited multiple times in this week by different people or on different days
+  const weekTrips = entries.filter(en => en.type==='wyjazd' && en.city && (en.week===undefined || en.week===weekOffset));
+
+  // Group by normalized city name (using geo proximity if cached)
+  const cityGroups = {};
+  weekTrips.forEach(en => {
+    const key = en.city.toLowerCase().trim().split(/[\s,]+/)[0];
+    if (!cityGroups[key]) cityGroups[key] = {city: en.city, entries: []};
+    cityGroups[key].entries.push(en);
+  });
+
+  // Also merge geo-close cities into same group
+  const cityKeys = Object.keys(cityGroups);
+  for (let i = 0; i < cityKeys.length; i++) {
+    for (let j = i+1; j < cityKeys.length; j++) {
+      const gA = geoCache[cityGroups[cityKeys[i]].entries[0].city.toLowerCase().trim()];
+      const gB = geoCache[cityGroups[cityKeys[j]].entries[0].city.toLowerCase().trim()];
+      if (gA && gB && haversine(gA, gB) <= CONFLICT_RADIUS_KM) {
+        // merge j into i
+        cityGroups[cityKeys[i]].entries.push(...cityGroups[cityKeys[j]].entries);
+        cityGroups[cityKeys[i]].city = cityGroups[cityKeys[i]].city; // keep first city name
+        delete cityGroups[cityKeys[j]];
+      }
+    }
+  }
+
+  const optims = Object.values(cityGroups).filter(g => {
+    // Only show if: multiple entries AND they are on different days (optimization opportunity)
+    const days = [...new Set(g.entries.map(en => en.day))];
+    return g.entries.length >= 2 && days.length >= 2;
+  }).sort((a,b) => b.entries.length - a.entries.length);
+
+  const optimEl = document.getElementById('optimList');
+  if (optims.length === 0) {
+    optimEl.innerHTML = '<div style="color:var(--text2);font-size:0.78rem;padding:8px 10px;background:var(--surface2);border-radius:8px">Brak sugestii optymalizacji</div>';
+  } else {
+    optimEl.innerHTML = optims.map(function(g) {
+      const days = [...new Set(g.entries.map(function(en){ return en.day; }))].sort();
+      const saving = days.length - 1;
+      const mechRows = g.entries.map(function(en) {
+        const mx = mechanics.find(function(x){ return x.id === en.mechId; });
+        const col = getColor(en.mechId);
+        const bg = col[0], fg = col[1];
+        const firstName = mx ? mx.name.split(' ')[0] : '?';
+        const orderTag = en.order
+          ? '<span style="color:var(--jd-yellow);margin-left:auto;font-size:0.68rem">\u{1F4CB} ' + en.order + '</span>'
+          : '';
+        return '<div style="display:flex;align-items:center;gap:7px;font-size:0.75rem;margin-bottom:3px">'
+          + '<div style="width:20px;height:20px;border-radius:50%;background:' + bg + ';color:' + fg + ';display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;flex-shrink:0">' + firstName[0] + '</div>'
+          + '<span style="color:var(--text)">' + firstName + '</span>'
+          + '<span style="color:var(--text2)"> · ' + DAYS_PL[en.day] + '</span>'
+          + orderTag
+          + '</div>';
+      }).join('');
+      return '<div style="background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.25);border-radius:10px;padding:10px 12px">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">'
+        + '<span style="font-weight:700;color:var(--text);font-size:0.83rem">\u{1F4CD} ' + g.city + '</span>'
+        + '<span style="font-size:0.68rem;background:rgba(251,191,36,.15);color:#fbbf24;border-radius:4px;padding:2px 7px;white-space:nowrap">−' + saving + ' wyjazd' + (saving > 1 ? 'y' : '') + '</span>'
+        + '</div>'
+        + '<div style="color:var(--text2);font-size:0.75rem;margin-bottom:8px">'
+        + g.entries.length + ' wyjazdy w ' + days.length + ' różnych dniach — można połączyć'
+        + '</div>'
+        + '<div style="display:flex;flex-direction:column">' + mechRows + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  // Trip list
+  const tripEntries = entries.filter(e=>e.type==='wyjazd' && e.city && (e.week===undefined || e.week===weekOffset)).sort((a,b)=>a.day-b.day);
+  document.getElementById('tripList').innerHTML = tripEntries.length===0
+    ? `<div style="color:var(--text2)">Brak zaplanowanych wyjazdów</div>`
+    : tripEntries.map(en => {
+        const m = mechanics.find(x=>x.id===en.mechId);
+        const [bg,fg] = getColor(en.mechId);
+        const conf = geoConflictIds.has(en.id);
+        return `<div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border-radius:8px;padding:7px 10px;border:1px solid ${conf?'var(--danger)':'var(--border)'}">
+          <div class="mech-avatar" style="background:${bg};color:${fg};width:24px;height:24px;font-size:0.65rem;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">${initials(m?.name||'?')}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${en.city}</div>
+            <div style="color:var(--text2);font-size:0.7rem">${DAYS_PL[en.day]} · ${m?.name?.split(' ')[0]}</div>
+          </div>
+          ${conf?`<span style="color:var(--danger);font-size:0.7rem">⚠</span>`:''}
+        </div>`;
+      }).join('');
+}
+
+function render() {
+  renderSidebar();
+  renderGrid();
+  renderRightPanel();
+  scheduleSave();
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+
+let selectedType = 'wyjazd';
+let selectedPriority = 'normal';
+
+function renderPriorityPicker() {
+  const pp = document.getElementById('priorityPicker');
+  if (!pp) return;
+  const defs = [
+    {k:'low',    e:'🟢', l:'Niski'},
+    {k:'normal', e:'🔵', l:'Normalny'},
+    {k:'high',   e:'🟡', l:'Wysoki'},
+    {k:'urgent', e:'🔴', l:'Pilny'}
+  ];
+  pp.innerHTML = defs.map(d =>
+    '<button type="button" class="priority-btn' + (selectedPriority===d.k?' active':'') + '" data-p="' + d.k + '" title="' + d.l + '" onclick="selectedPriority=\'' + d.k + '\';renderPriorityPicker()">' + d.e + '</button>'
+  ).join('');
+}
+
+function openModal(mechId=null, day=null, entryId=null) {
+  // Block new entries on holidays (allow editing existing)
+  if (!entryId && day !== null) {
+    const dates = getWeekDates(weekOffset);
+    const cellDate = dates[day];
+    if (cellDate) {
+      const hName = getHolidays(cellDate.getFullYear())[dateKey(cellDate)];
+      if (hName) { alert(`⛔ ${hName} — dzień wolny od pracy`); return; }
+    }
+  }
+  editingEntry = entryId ? entries.find(e=>e.id===entryId) : null;
+  selectedType = editingEntry?.type || 'wyjazd';
+
+  // Mechanic select
+  const fMech = document.getElementById('fMech');
+  fMech.innerHTML = mechanics.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+  if (editingEntry) fMech.value = editingEntry.mechId;
+  else if (mechId) fMech.value = mechId;
+
+  // Day select
+  const fDay = document.getElementById('fDay');
+  fDay.innerHTML = DAYS_FULL.map((d,i)=>`<option value="${i}">${d}</option>`).join('');
+  if (editingEntry) fDay.value = editingEntry.day;
+  else if (day!==null) fDay.value = day;
+
+  // Type picker
+  renderTypePicker();
+
+  document.getElementById('fNote').value  = editingEntry?.note  || '';
+  document.getElementById('fOrder').value = editingEntry?.order || '';
+  selectedPriority = editingEntry?.priority || 'normal';
+  renderPriorityPicker();
+  document.getElementById('modalTitle').textContent = editingEntry ? 'Edytuj wpis' : 'Nowy wpis';
+
+  // City autocomplete init
+  if (editingEntry && editingEntry.city) {
+    setCitySelection(editingEntry.city, editingEntry.cityMeta || '', editingEntry.cityLat || '', editingEntry.cityLon || '');
+  } else {
+    clearCitySelection();
+  }
+
+  updateCityVisibility();
+  checkConflictWarn();
+
+  document.getElementById('modalOverlay').classList.add('open');
+  setTimeout(() => {
+    setupCityAutocomplete();
+    if (!editingEntry || !editingEntry.city) document.getElementById('fCitySearch').focus();
+  }, 30);
+
+  document.getElementById('fMech').onchange = () => checkConflictWarn();
+  document.getElementById('fDay').onchange = () => checkConflictWarn();
+}
+
+function renderTypePicker() {
+  document.getElementById('typePicker').innerHTML = TYPES.map(t=>
+    `<button class="type-btn ${selectedType===t.key?'active':''}" onclick="selectType('${t.key}')">${t.label}</button>`
+  ).join('');
+}
+
+function selectType(key) {
+  selectedType = key;
+  renderTypePicker();
+  updateCityVisibility();
+  checkConflictWarn();
+}
+
+function updateCityVisibility() {
+  document.getElementById('cityGroup').style.display = selectedType==='wyjazd' ? '' : 'none';
+  document.getElementById('orderGroup').style.display = (selectedType==='wyjazd'||selectedType==='praca') ? '' : 'none';
+}
+
+async function checkConflictWarn() {
+  if (selectedType!=='wyjazd') { document.getElementById('conflictWarn').classList.remove('show'); return; }
+  const mechId = parseInt(document.getElementById('fMech').value);
+  const day = parseInt(document.getElementById('fDay').value);
+  const city = document.getElementById('fCity').value.trim();
+  if (!city) { document.getElementById('conflictWarn').classList.remove('show'); return; }
+
+  const warn = document.getElementById('conflictWarn');
+  warn.textContent = '🔍 Sprawdzam...';
+  warn.classList.add('show');
+  warn.style.background = '#1a2a3a';
+  warn.style.borderColor = 'var(--accent2)';
+  warn.style.color = '#93c5fd';
+
+  // Use coords from selection if available
+  const selLat = document.getElementById('fCityLat').value;
+  const selLon = document.getElementById('fCityLon').value;
+  let gCity = null;
+  if (selLat && selLon) {
+    gCity = {lat: parseFloat(selLat), lon: parseFloat(selLon)};
+    geoCache[city.toLowerCase().trim()] = gCity;
+  } else {
+    gCity = await geocode(city);
+  }
+
+  const conflicts = [];
+  for (const en of entries) {
+    if (en.type!=='wyjazd' || en.day!==day || en.mechId===mechId) continue;
+    if (editingEntry && en.id===editingEntry.id) continue;
+    if (!en.city) continue;
+    const gEn = await geocode(en.city);
+    let close = false;
+    if (gCity && gEn) {
+      close = haversine(gCity, gEn) <= CONFLICT_RADIUS_KM;
+    } else {
+      close = similarCityFallback(city, en.city);
+    }
+    if (close) conflicts.push(en);
+  }
+
+  if (conflicts.length>0) {
+    const infos = await Promise.all(conflicts.map(async en => {
+      const m = mechanics.find(m=>m.id===en.mechId)?.name;
+      const gEn = geoCache[en.city.toLowerCase().trim()];
+      const dist = gCity && gEn ? Math.round(haversine(gCity, gEn)) : null;
+      return `${m} (${en.city}${dist!==null?' ~'+dist+'km':''})`;
+    }));
+    warn.textContent = `⚠ Uwaga: ${infos.join(', ')} — w promieniu ${CONFLICT_RADIUS_KM} km!`;
+    warn.style.background = '#2a1a1a';
+    warn.style.borderColor = 'var(--danger)';
+    warn.style.color = '#fca5a5';
+  } else {
+    warn.textContent = `✅ Brak mechaników w promieniu ${CONFLICT_RADIUS_KM} km tego dnia`;
+    warn.style.background = '#0f2a1a';
+    warn.style.borderColor = '#1a4a2a';
+    warn.style.color = 'var(--success)';
+    setTimeout(() => { if (!document.getElementById('fCity').matches(':focus')) warn.classList.remove('show'); }, 2000);
+  }
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  editingEntry = null;
+}
+
+function saveEntry() {
+  const mechId = parseInt(document.getElementById('fMech').value);
+  const day    = parseInt(document.getElementById('fDay').value);
+  const city   = document.getElementById('fCity').value.trim();
+  const cityLat= document.getElementById('fCityLat').value;
+  const cityLon= document.getElementById('fCityLon').value;
+  const cityMeta = document.getElementById('citySelectedLabel')?.textContent || '';
+  const note   = document.getElementById('fNote').value.trim();
+  const order    = document.getElementById('fOrder').value.trim();
+  const priority = selectedPriority || 'normal';
+
+  // Pre-populate geo cache from selection
+  if (city && cityLat && cityLon) {
+    geoCache[city.toLowerCase().trim()] = {lat: parseFloat(cityLat), lon: parseFloat(cityLon)};
+  }
+
+  if (editingEntry) {
+    editingEntry.mechId  = mechId;
+    editingEntry.day     = day;
+    editingEntry.type    = selectedType;
+    editingEntry.city    = city;
+    editingEntry.cityMeta= cityMeta;
+    editingEntry.cityLat = cityLat;
+    editingEntry.cityLon = cityLon;
+    editingEntry.note    = note;
+    editingEntry.order    = order;
+    editingEntry.priority = priority;
+    if (editingEntry.week === undefined) editingEntry.week = weekOffset;
+  } else {
+    entries.push({id:e(), mechId, day, type:selectedType, city, cityMeta, cityLat, cityLon, note, order, priority, week:weekOffset});
+  }
+  closeModal();
+  render();
+  updateGeoConflicts();
+}
+
+function deleteEntry(id, ev) {
+  ev.stopPropagation();
+  entries = entries.filter(en=>en.id!==id);
+  render();
+  updateGeoConflicts();
+}
+
+// ── MECH MODAL ────────────────────────────────────────────────────────────────
+
+function openMechModal() {
+  document.getElementById('mName').value = '';
+  document.getElementById('mSpec').value = '';
+  document.getElementById('mechModalOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('mName').focus(),50);
+}
+
+function closeMechModal() {
+  document.getElementById('mechModalOverlay').classList.remove('open');
+}
+
+function saveMech() {
+  const name = document.getElementById('mName').value.trim();
+  if (!name) return;
+  const spec = document.getElementById('mSpec').value.trim() || 'Mechanik';
+  const ids = mechanics.map(m=>m.id);
+  const newId = ids.length ? Math.max(...ids)+1 : 1;
+  mechanics.push({id:newId, name, spec});
+  closeMechModal();
+  render();
+}
+
+// ── EVENTS ────────────────────────────────────────────────────────────────────
+
+document.getElementById('prevWeek').onclick = () => { weekOffset--; syncVacationsToEntries(); syncNoTripsToEntries(); render(); };
+document.getElementById('nextWeek').onclick = () => { weekOffset++; syncVacationsToEntries(); syncNoTripsToEntries(); render(); };
+document.getElementById('todayBtn').onclick = () => { weekOffset=0; syncVacationsToEntries(); syncNoTripsToEntries(); render(); };
+document.getElementById('addEntryBtn').onclick = () => openModal();
+document.getElementById('addMechBtn').onclick = () => { switchPage('mechanics'); setTimeout(openNewMechModal, 50); };
+document.getElementById('addMechSidebar').onclick = () => { switchPage('mechanics'); setTimeout(openNewMechModal, 50); };
+document.getElementById('modalCancel').onclick = closeModal;
+document.getElementById('modalSave').onclick = saveEntry;
+document.getElementById('mechModalCancel').onclick = closeMechModal;
+document.getElementById('mechModalSave').onclick = saveMech;
+
+document.getElementById('modalOverlay').onclick = e => { if(e.target===document.getElementById('modalOverlay')) closeModal(); };
+document.getElementById('mechModalOverlay').onclick = e => { if(e.target===document.getElementById('mechModalOverlay')) closeMechModal(); };
+document.getElementById('editMechModal').onclick = e => { if(e.target===document.getElementById('editMechModal')) closeEditMechModal(); };
+
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape') { closeModal(); closeMechModal(); }
+  if (e.key==='Enter' && document.getElementById('modalOverlay').classList.contains('open')) saveEntry();
+  if (e.key==='Enter' && document.getElementById('mechModalOverlay').classList.contains('open')) saveMech();
+});
+
+// ── CITY AUTOCOMPLETE ────────────────────────────────────────────────────────
+
+let citySearchTimer = null;
+let cityFocusedIdx = -1;
+let citySuggestionsData = [];
+
+function setupCityAutocomplete() {
+  const input = document.getElementById('fCitySearch');
+  const box   = document.getElementById('citySuggestions');
+  if (!input) return;
+
+  input.addEventListener('input', () => {
+    clearTimeout(citySearchTimer);
+    const q = input.value.trim();
+    if (q.length < 2) { hideSuggestions(); return; }
+    document.getElementById('citySearchSpinner').style.display = 'inline';
+    citySearchTimer = setTimeout(() => searchCities(q), 400);
+  });
+
+  input.addEventListener('keydown', (e) => {
+    const items = box.querySelectorAll('.city-suggestion-item');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      cityFocusedIdx = Math.min(cityFocusedIdx + 1, items.length - 1);
+      updateFocus(items);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      cityFocusedIdx = Math.max(cityFocusedIdx - 1, 0);
+      updateFocus(items);
+    } else if (e.key === 'Enter' && cityFocusedIdx >= 0) {
+      e.preventDefault();
+      items[cityFocusedIdx]?.click();
+    } else if (e.key === 'Escape') {
+      hideSuggestions();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!document.getElementById('cityPickerWrap')?.contains(e.target)) hideSuggestions();
+  });
+}
+
+function updateFocus(items) {
+  items.forEach((el, i) => el.classList.toggle('focused', i === cityFocusedIdx));
+  items[cityFocusedIdx]?.scrollIntoView({block:'nearest'});
+}
+
+async function searchCities(q) {
+  const box = document.getElementById('citySuggestions');
+  const spinner = document.getElementById('citySearchSpinner');
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=8&countrycodes=pl&addressdetails=1&featuretype=settlement`;
+    const res = await fetch(url, {headers:{'Accept-Language':'pl'}});
+    const data = await res.json();
+    spinner.style.display = 'none';
+
+    if (!data || data.length === 0) {
+      box.innerHTML = `<div style="padding:12px 14px;color:var(--text2);font-size:0.82rem">Brak wyników dla "${q}"</div>`;
+      box.style.display = 'block';
+      return;
+    }
+
+    citySuggestionsData = data;
+    cityFocusedIdx = -1;
+
+    box.innerHTML = data.map((item, idx) => {
+      const addr = item.address || {};
+      const name = addr.city || addr.town || addr.village || addr.hamlet || item.name || item.display_name.split(',')[0];
+      const gmina = addr.municipality || addr.county || '';
+      const powiat = addr.county || '';
+      const woj = addr.state || '';
+      const type = item.type;
+      const typeLabel = {city:'miasto',town:'miasto',village:'wieś',hamlet:'przysiółek',suburb:'dzielnica'}[type] || type;
+
+      let meta = [];
+      if (gmina && gmina !== name) meta.push('gm. ' + gmina);
+      if (powiat && powiat !== gmina) meta.push('pow. ' + powiat.replace(' County',''));
+      if (woj) meta.push(woj);
+
+      return `<div class="city-suggestion-item" data-idx="${idx}" onclick="selectCity(${idx})">
+        <div class="sug-name">${name}<span class="sug-type">${typeLabel}</span></div>
+        <div class="sug-meta">${meta.join(' · ')}</div>
+      </div>`;
+    }).join('');
+
+    box.style.display = 'block';
+  } catch(err) {
+    spinner.style.display = 'none';
+    box.innerHTML = `<div style="padding:10px 14px;color:var(--danger);font-size:0.8rem">Błąd wyszukiwania</div>`;
+    box.style.display = 'block';
+  }
+}
+
+function selectCity(idx) {
+  const item = citySuggestionsData[idx];
+  if (!item) return;
+  const addr = item.address || {};
+  const name = addr.city || addr.town || addr.village || addr.hamlet || item.name || item.display_name.split(',')[0];
+  const gmina = addr.municipality || addr.county || '';
+  const woj = addr.state || '';
+  let meta = [];
+  if (gmina && gmina !== name) meta.push('gm. ' + gmina);
+  if (woj) meta.push(woj);
+  const metaStr = meta.join(' · ');
+  const lat = item.lat;
+  const lon = item.lon;
+
+  setCitySelection(name, metaStr, lat, lon);
+  hideSuggestions();
+  checkConflictWarn();
+}
+
+function setCitySelection(name, meta, lat, lon) {
+  document.getElementById('fCity').value = name;
+  document.getElementById('fCityLat').value = lat || '';
+  document.getElementById('fCityLon').value = lon || '';
+  document.getElementById('fCitySearch').value = name;
+  document.getElementById('fCitySearch').style.display = 'none';
+  document.getElementById('citySearchSpinner').style.display = 'none';
+
+  const sel = document.getElementById('citySelected');
+  document.getElementById('citySelectedLabel').textContent = name + (meta ? ' · ' + meta : '');
+  sel.style.display = 'flex';
+}
+
+function clearCitySelection() {
+  document.getElementById('fCity').value = '';
+  document.getElementById('fCityLat').value = '';
+  document.getElementById('fCityLon').value = '';
+  document.getElementById('fCitySearch').value = '';
+  document.getElementById('fCitySearch').style.display = '';
+  document.getElementById('citySelected').style.display = 'none';
+  document.getElementById('conflictWarn').classList.remove('show');
+  setTimeout(() => document.getElementById('fCitySearch')?.focus(), 50);
+}
+
+function hideSuggestions() {
+  const box = document.getElementById('citySuggestions');
+  if (box) box.style.display = 'none';
+  document.getElementById('citySearchSpinner').style.display = 'none';
+}
+
+// ── PAGE SWITCHING ────────────────────────────────────────────────────────────
+
+let currentPage = 'schedule';
+
+function switchPage(page) {
+  currentPage = page;
+  document.getElementById('page-schedule').style.display = page === 'schedule' ? '' : 'none';
+  document.getElementById('page-mechanics').style.display = page === 'mechanics' ? '' : 'none';
+  document.getElementById('scheduleActions').style.display = page === 'schedule' ? '' : 'none';
+  document.getElementById('mechActions').style.display = page === 'mechanics' ? '' : 'none';
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.page === page));
+  // week-nav only on schedule
+  document.querySelector('.week-nav').style.display = page === 'schedule' ? '' : 'none';
+  if (page === 'mechanics') renderMechCards();
+  if (page === 'schedule') syncNoTripsToEntries();
+}
+
+// ── MECHANICS MANAGEMENT ──────────────────────────────────────────────────────
+
+// Extend mechanics with extra fields if not present
+function ensureMechFields() {
+  mechanics.forEach(m => {
+    if (!m.phone)    m.phone = '';
+    if (!m.email)    m.email = '';
+    if (!m.note)     m.note = '';
+    if (!m.vacations) m.vacations = []; // [{from:'2025-06-01', to:'2025-06-14', label:'Urlop letni'}]
+  });
+}
+
+function renderMechCards() {
+  ensureMechFields();
+  const grid = document.getElementById('mechCardsGrid');
+  grid.innerHTML = mechanics.map((m, idx) => {
+    const [bg, fg] = getColor(m.id);
+    const trips = entries.filter(en => en.mechId === m.id && en.type === 'wyjazd').length;
+    const vacBadges = (m.vacations || []).map(v =>
+      `<span class="vacation-badge">🌴 ${fmtDateStr(v.from)} – ${fmtDateStr(v.to)}${v.label ? ' · ' + v.label : ''}</span>`
+    ).join('');
+    return `<div class="mech-card" draggable="true" data-idx="${idx}" data-id="${m.id}"
+        ondragstart="dragStart(event,${idx})" ondragover="dragOver(event,${idx})" ondrop="dragDrop(event,${idx})" ondragleave="dragLeave(event)">
+      <span class="drag-handle" title="Przeciągnij">⠿</span>
+      <div class="mech-card-actions">
+        <button class="btn btn-secondary" style="font-size:0.75rem;padding:4px 10px" onclick="openEditMechModal(${m.id})">✏️ Edytuj</button>
+      </div>
+      <div class="mech-card-header">
+        <div class="mech-card-avatar" style="background:${bg};color:${fg}">${initials(m.name)}</div>
+        <div>
+          <div class="mech-card-name">${m.name}</div>
+          <div class="mech-card-spec">${m.spec==='Pomocnik'?'<span style="font-size:0.72rem;background:rgba(255,222,0,.15);color:var(--jd-yellow);border:1px solid rgba(255,222,0,.3);border-radius:4px;padding:2px 7px">Pomocnik</span>':m.spec}</div>
+        </div>
+      </div>
+      <div class="mech-card-info">
+        ${m.phone ? `<span>📞 <b>${m.phone}</b></span>` : '<span style="opacity:.4">📞 brak numeru</span>'}
+        ${m.email ? `<span>✉️ <b>${m.email}</b></span>` : '<span style="opacity:.4">✉️ brak emaila</span>'}
+        ${m.note  ? `<span>📝 ${m.note}</span>` : ''}
+        <span style="margin-top:4px">🚗 Wyjazdów: <b>${trips}</b></span>
+      </div>
+      ${vacBadges ? `<div class="mech-card-vacations"><div style="font-size:0.72rem;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Urlopy</div>${vacBadges}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function fmtDateStr(str) {
+  if (!str) return '';
+  const [y,m,d] = str.split('-');
+  return `${d}.${m}.${y}`;
+}
+
+// ── DRAG & DROP reorder ───────────────────────────────────────────────────────
+
+let dragSrcIdx = null;
+
+function dragStart(ev, idx) {
+  dragSrcIdx = idx;
+  ev.currentTarget.classList.add('dragging');
+  ev.dataTransfer.effectAllowed = 'move';
+}
+
+function dragOver(ev, idx) {
+  ev.preventDefault();
+  ev.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.mech-card').forEach((c,i) => c.classList.toggle('drag-over', i === idx && idx !== dragSrcIdx));
+}
+
+function dragLeave(ev) {
+  ev.currentTarget.classList.remove('drag-over');
+}
+
+function dragDrop(ev, toIdx) {
+  ev.preventDefault();
+  if (dragSrcIdx === null || dragSrcIdx === toIdx) { renderMechCards(); return; }
+  const moved = mechanics.splice(dragSrcIdx, 1)[0];
+  mechanics.splice(toIdx, 0, moved);
+  dragSrcIdx = null;
+  renderMechCards();
+  render(); // refresh sidebar order
+}
+
+// ── EDIT MECH MODAL ───────────────────────────────────────────────────────────
+
+let editMechId = null;
+let vacationRows = [];
+
+function openEditMechModal(id) {
+  ensureMechFields();
+  const m = mechanics.find(x => x.id === id);
+  if (!m) return;
+  editMechId = id;
+  document.getElementById('editMechTitle').textContent = m.name;
+  document.getElementById('emName').value    = m.name;
+  document.getElementById('emSpec').value    = m.spec;
+  document.getElementById('emNoTrips').checked = !!m.noTrips;
+  document.getElementById('emPhone').value   = m.phone || '';
+  document.getElementById('emEmail').value   = m.email || '';
+  document.getElementById('emNote').value    = m.note  || '';
+
+  vacationRows = (m.vacations || []).map(v => ({...v}));
+  renderVacationRows();
+
+  document.getElementById('emDeleteBtn').onclick = () => deleteMech(id);
+  document.getElementById('editMechModal').classList.add('open');
+}
+
+function openNewMechModal() {
+  ensureMechFields();
+  editMechId = null;
+  document.getElementById('editMechTitle').textContent = 'Nowy mechanik';
+  document.getElementById('emName').value    = '';
+  document.getElementById('emSpec').value    = '';
+  document.getElementById('emNoTrips').checked = false;
+  document.getElementById('emPhone').value   = '';
+  document.getElementById('emEmail').value   = '';
+  document.getElementById('emNote').value    = '';
+  vacationRows = [];
+  renderVacationRows();
+  document.getElementById('emDeleteBtn').style.display = 'none';
+  document.getElementById('editMechModal').classList.add('open');
+}
+
+function closeEditMechModal() {
+  document.getElementById('editMechModal').classList.remove('open');
+  document.getElementById('emDeleteBtn').style.display = '';
+  editMechId = null;
+}
+
+function renderVacationRows() {
+  const list = document.getElementById('vacationList');
+  list.innerHTML = vacationRows.map((v, i) => `
+    <div class="vacation-row">
+      <input type="date" value="${v.from || ''}" onchange="vacationRows[${i}].from=this.value" placeholder="Od">
+      <input type="date" value="${v.to || ''}" onchange="vacationRows[${i}].to=this.value" placeholder="Do">
+      <button class="rm-vac" onclick="removeVacationRow(${i})">✕</button>
+    </div>
+    <div style="padding:0 2px 4px">
+      <input class="form-input" style="font-size:0.78rem;padding:5px 10px" value="${v.label||''}" placeholder="Opis np. urlop letni" onchange="vacationRows[${i}].label=this.value">
+    </div>`
+  ).join('');
+}
+
+function addVacationRow() {
+  vacationRows.push({from:'', to:'', label:''});
+  renderVacationRows();
+}
+
+function removeVacationRow(i) {
+  vacationRows.splice(i, 1);
+  renderVacationRows();
+}
+
+function saveEditMech() {
+  const name  = document.getElementById('emName').value.trim();
+  if (!name) { document.getElementById('emName').focus(); return; }
+  const spec     = document.getElementById('emSpec').value.trim() || 'Mechanik';
+  const noTrips  = document.getElementById('emNoTrips').checked;
+  const phone    = document.getElementById('emPhone').value.trim();
+  const email    = document.getElementById('emEmail').value.trim();
+  const note     = document.getElementById('emNote').value.trim();
+  const vacations = vacationRows.filter(v => v.from && v.to);
+
+  if (editMechId) {
+    const m = mechanics.find(x => x.id === editMechId);
+    if (m) { m.name = name; m.spec = spec; m.noTrips = noTrips; m.phone = phone; m.email = email; m.note = note; m.vacations = vacations; }
+  } else {
+    const ids = mechanics.map(m => m.id);
+    const newId = ids.length ? Math.max(...ids) + 1 : 1;
+    mechanics.push({id: newId, name, spec, noTrips, phone, email, note, vacations});
+  }
+
+  // Auto-add vacation entries to schedule
+  syncVacationsToEntries();
+  // Auto-fill workshop days for noTrips mechanics (current week only)
+  syncNoTripsToEntries();
+
+  closeEditMechModal();
+  renderMechCards();
+  render();
+}
+
+function syncVacationsToEntries() {
+  // Remove old auto-vacation entries for current week only
+  entries = entries.filter(en => !(en.autoVacation && (en.week === undefined || en.week === weekOffset)));
+  // Get actual dates of current week
+  const weekDates = getWeekDates(weekOffset);
+  mechanics.forEach(m => {
+    (m.vacations || []).forEach(v => {
+      if (!v.from || !v.to) return;
+      const from = new Date(v.from + 'T00:00:00');
+      const to   = new Date(v.to   + 'T00:00:00');
+      // Only add entries for days in current week that fall within vacation range
+      weekDates.forEach((wd, dayIdx) => {
+        const wdMidnight = new Date(wd.getFullYear(), wd.getMonth(), wd.getDate());
+        if (wdMidnight >= from && wdMidnight <= to) {
+          entries.push({
+            id: e(), mechId: m.id, day: dayIdx,
+            type: 'urlop', city: '', note: v.label || 'Urlop',
+            autoVacation: true, week: weekOffset,
+            vacFrom: v.from, vacTo: v.to
+          });
+        }
+      });
+    });
+  });
+}
+
+function syncNoTripsToEntries() {
+  // Remove old auto-workshop entries
+  entries = entries.filter(en => !(en.autoWorkshop && (en.week===undefined || en.week===weekOffset)));
+  const dates = getWeekDates(weekOffset);
+  mechanics.filter(m => m.noTrips).forEach(m => {
+    // Only fill Mon–Fri (days 0–4), skip holidays
+    for (let dayIdx = 0; dayIdx <= 4; dayIdx++) {
+      const cellDate = dates[dayIdx];
+      const isHoliday = cellDate && !!getHolidays(cellDate.getFullYear())[dateKey(cellDate)];
+      if (isHoliday) continue;
+      // Don't add if there's already any manual entry for that day
+      const hasEntry = entries.some(en => en.mechId === m.id && en.day === dayIdx && !en.autoWorkshop && (en.week===undefined || en.week===weekOffset));
+      if (!hasEntry) {
+        entries.push({
+          id: e(), mechId: m.id, day: dayIdx,
+          type: 'praca', city: '', note: 'Warsztat',
+          autoWorkshop: true, week: weekOffset
+        });
+      }
+    }
+  });
+}
+
+function deleteMech(id) {
+  if (!confirm('Na pewno usunąć tego mechanika? Wszystkie jego wpisy zostaną usunięte.')) return;
+  mechanics = mechanics.filter(m => m.id !== id);
+  entries = entries.filter(en => en.mechId !== id);
+  closeEditMechModal();
+  renderMechCards();
+  render();
+  updateGeoConflicts();
+}
+
+// ── THEME ─────────────────────────────────────────────────────────────────────────────
+
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light-mode');
+  const btn = document.getElementById('themeToggleBtn');
+  if (btn) btn.textContent = isLight ? '☀️' : '🌙';
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// KONFIGURACJA — uzupełnij po rejestracji aplikacji w Azure AD
+// ══════════════════════════════════════════════════════════════════════════════
+const SP_SITE_URL  = '';            // np. 'https://wanicki.sharepoint.com/sites/serwis'
+const SP_LIST_NAME = 'GrafikSerwis'; // nazwa listy SharePoint
+const AAD_CLIENT_ID = '';           // Application (client) ID z Azure AD
+const AAD_TENANT_ID = '';           // Directory (tenant) ID z Azure AD
+// ══════════════════════════════════════════════════════════════════════════════
+
+const SP_ITEM_TITLE = 'grafik_v1';
+let spLastSaved = null;
+let spSaveTimer = null;
+let spConfigured = SP_SITE_URL !== '' && AAD_CLIENT_ID !== '';
+
+// ── MSAL konfiguracja ─────────────────────────────────────────────────────────
+let msalApp = null;
+let msalAccount = null;
+
+function initMsal() {
+  if (!spConfigured) return;
+  msalApp = new msal.PublicClientApplication({
+    auth: {
+      clientId: AAD_CLIENT_ID,
+      authority: 'https://login.microsoftonline.com/' + AAD_TENANT_ID,
+      redirectUri: window.location.href.split('?')[0]
+    },
+    cache: { cacheLocation: 'sessionStorage' }
+  });
+}
+
+async function getToken() {
+  if (!msalApp) return null;
+  const scopes = [SP_SITE_URL + '/.default'];
+  // Try silent first
+  const accounts = msalApp.getAllAccounts();
+  if (accounts.length > 0) {
+    try {
+      const result = await msalApp.acquireTokenSilent({ scopes, account: accounts[0] });
+      msalAccount = accounts[0];
+      return result.accessToken;
+    } catch(e) { /* fall through to popup */ }
+  }
+  // Popup login
+  try {
+    const result = await msalApp.acquireTokenPopup({ scopes });
+    msalAccount = result.account;
+    return result.accessToken;
+  } catch(e) {
+    syncStatusSet('error', 'Błąd logowania');
+    console.error('MSAL error:', e);
+    return null;
+  }
+}
+
+function syncStatusSet(state, text) {
+  ['', '2'].forEach(suffix => {
+    const el  = document.getElementById('syncStatus'  + suffix);
+    const ico = document.getElementById('syncIcon'    + suffix);
+    const txt = document.getElementById('syncText'    + suffix);
+    if (!el) return;
+    el.className = 'sync-status ' + (state || '');
+    if (ico) ico.textContent = state === 'ok' ? '✅' : state === 'error' ? '❌' : state === 'saving' ? '⏳' : 'ℹ️';
+    if (txt) txt.textContent = text;
+  });
+}
+
+// ── Serializacja stanu ────────────────────────────────────────────────────────
+function appStateToJSON() {
+  return JSON.stringify({ mechanics, entries });
+}
+
+function appStateFromJSON(json) {
+  try {
+    const d = JSON.parse(json);
+    if (d.mechanics) mechanics = d.mechanics;
+    if (d.entries)   entries   = d.entries;
+    return true;
+  } catch(e) { return false; }
+}
+
+// ── SharePoint REST helpers ───────────────────────────────────────────────────
+async function spRequest(method, url, body) {
+  const headers = { 'Accept': 'application/json;odata=nometadata', 'Content-Type': 'application/json;odata=nometadata' };
+  if (method !== 'GET') {
+    // get request digest (form digest) for write operations
+    try {
+      const dr = await fetch(SP_SITE_URL + '/_api/contextinfo', { method:'POST', headers:{'Accept':'application/json;odata=nometadata'} });
+      const dd = await dr.json();
+      headers['X-RequestDigest'] = dd.FormDigestValue;
+    } catch(e) { /* continue without digest — will fail for writes but let error propagate */ }
+    if (method === 'PATCH') headers['IF-MATCH'] = '*';
+    if (method === 'PATCH' || method === 'POST') headers['X-HTTP-Method'] = method === 'PATCH' ? 'MERGE' : undefined;
+    if (headers['X-HTTP-Method'] === undefined) delete headers['X-HTTP-Method'];
+  }
+  const resp = await fetch(url, { method: method === 'PATCH' ? 'POST' : method, headers, body: body ? JSON.stringify(body) : undefined });
+  if (!resp.ok) throw new Error('HTTP ' + resp.status + ' ' + resp.statusText);
+  if (resp.status === 204) return null;
+  return resp.json();
+}
+
+async function spGetItem() {
+  const url = SP_SITE_URL + "/_api/web/lists/getbytitle('" + SP_LIST_NAME + "')/items?$filter=Title eq '" + SP_ITEM_TITLE + "'&$top=1&$select=Id,GrafikData";
+  const data = await spRequest('GET', url);
+  return data && data.value && data.value.length > 0 ? data.value[0] : null;
+}
+
+// ── Wczytanie ze SharePoint ───────────────────────────────────────────────────
+async function spLoad() {
+  if (!spConfigured) {
+    // Brak konfiguracji SP — tryb lokalny (localStorage)
+    const local = localStorage.getItem('grafik_serwis_backup');
+    if (local) {
+      appStateFromJSON(local);
+      syncStatusSet('ok', 'Dane lokalne');
+    } else {
+      syncStatusSet('ok', 'Tryb lokalny');
+    }
+    syncNoTripsToEntries(); syncVacationsToEntries(); render(); updateGeoConflicts();
+    spReady = true;
+    return;
+  }
+  syncStatusSet('saving', 'Wczytywanie...');
+  try {
+    const item = await spGetItem();
+    if (item && item.GrafikData) {
+      appStateFromJSON(item.GrafikData);
+      spLastSaved = item.GrafikData;
+      syncStatusSet('ok', 'Wczytano ✔');
+    } else {
+      syncStatusSet('ok', 'Nowy grafik — brak danych');
+    }
+  } catch(e) {
+    syncStatusSet('error', 'Błąd wczytania');
+    console.error('SP load error:', e);
+    const local = localStorage.getItem('grafik_serwis_backup');
+    if (local) { appStateFromJSON(local); syncStatusSet('error', 'Offline — dane lokalne'); }
+  }
+  syncNoTripsToEntries(); syncVacationsToEntries(); render(); updateGeoConflicts();
+  spReady = true;
+}
+
+// ── Zapis do SharePoint ───────────────────────────────────────────────────────
+async function spSave(manual) {
+  const json = appStateToJSON();
+  if (!manual && json === spLastSaved) return; // bez zmian
+  // always backup locally
+  localStorage.setItem('grafik_serwis_backup', json);
+  if (!spConfigured) return;
+  syncStatusSet('saving', 'Zapisywanie...');
+  try {
+    const item = await spGetItem();
+    const payload = { Title: SP_ITEM_TITLE, GrafikData: json };
+    if (item) {
+      const patchUrl = SP_SITE_URL + "/_api/web/lists/getbytitle('" + SP_LIST_NAME + "')/items(" + item.Id + ")";
+      await spRequest('PATCH', patchUrl, payload);
+    } else {
+      const postUrl = SP_SITE_URL + "/_api/web/lists/getbytitle('" + SP_LIST_NAME + "')/items";
+      await spRequest('POST', postUrl, payload);
+    }
+    spLastSaved = json;
+    const now = new Date();
+    syncStatusSet('ok', 'Zapisano ' + now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0'));
+  } catch(e) {
+    syncStatusSet('error', 'Błąd zapisu — dane lokalne OK');
+    console.error('SP save error:', e);
+  }
+}
+
+// ── Autozapis po zmianie (debounce 3s) ───────────────────────────────────────
+let spReady = false; // don't autosave until initial load is complete
+
+function scheduleSave() {
+  if (!spReady) return;
+  clearTimeout(spSaveTimer);
+  spSaveTimer = setTimeout(() => spSave(false), 3000);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+ensureMechFields();
+syncNoTripsToEntries();
+render();
+updateGeoConflicts();
+setupCityAutocomplete();
+</script>
+</body>
+</html>
