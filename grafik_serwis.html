@@ -2130,9 +2130,9 @@ async function spRequest(method, url, body) {
   return resp.json();
 }
 
-async function spGetItem() {
+async function spGetItem(token) {
   const url = SP_SITE_URL + "/_api/web/lists/getbytitle('" + SP_LIST_NAME + "')/items?$filter=Title eq '" + SP_ITEM_TITLE + "'&$top=1&$select=Id,GrafikData";
-  const data = await spRequest('GET', url);
+  const data = await spRequest('GET', url, null, token);
   return data && data.value && data.value.length > 0 ? data.value[0] : null;
 }
 
@@ -2151,9 +2151,12 @@ async function spLoad() {
     spReady = true;
     return;
   }
+  // Sprawdź token — jeśli brak, przekieruj do logowania natychmiast
+  const token = await getToken();
+  if (!token) return; // getToken sam przekierowuje
   syncStatusSet('saving', 'Wczytywanie...');
   try {
-    const item = await spGetItem();
+    const item = await spGetItem(token);
     if (item && item.GrafikData) {
       appStateFromJSON(item.GrafikData);
       spLastSaved = item.GrafikData;
@@ -2180,14 +2183,16 @@ async function spSave(manual) {
   if (!spConfigured) return;
   syncStatusSet('saving', 'Zapisywanie...');
   try {
-    const item = await spGetItem();
+    const token = await getToken();
+    if (!token) return;
+    const item = await spGetItem(token);
     const payload = { Title: SP_ITEM_TITLE, GrafikData: json };
     if (item) {
       const patchUrl = SP_SITE_URL + "/_api/web/lists/getbytitle('" + SP_LIST_NAME + "')/items(" + item.Id + ")";
-      await spRequest('PATCH', patchUrl, payload);
+      await spRequest('PATCH', patchUrl, payload, token);
     } else {
       const postUrl = SP_SITE_URL + "/_api/web/lists/getbytitle('" + SP_LIST_NAME + "')/items";
-      await spRequest('POST', postUrl, payload);
+      await spRequest('POST', postUrl, payload, token);
     }
     spLastSaved = json;
     const now = new Date();
