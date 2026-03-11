@@ -2299,14 +2299,19 @@ async function spSave(manual) {
   try {
     const token = await getToken();
     if (!token) return;
+    const siteId = await getSiteId(token);
     const item = await spGetItem(token);
-    const payload = { Title: SP_ITEM_TITLE, GrafikData: json };
-    if (item) {
-      const patchUrl = SP_SITE_URL + "/_api/web/lists/getbytitle('" + SP_LIST_NAME + "')/items(" + item.Id + ")";
-      await spRequest('PATCH', patchUrl, payload, token);
+    const fields = { Title: SP_ITEM_TITLE, GrafikData: json };
+    if (item && item.Id) {
+      // Update existing item
+      const patchUrl = 'https://graph.microsoft.com/v1.0/sites/' + siteId +
+        '/lists/' + SP_LIST_NAME + '/items/' + item.Id + '/fields';
+      await graphRequest('PATCH', patchUrl, fields, token);
     } else {
-      const postUrl = SP_SITE_URL + "/_api/web/lists/getbytitle('" + SP_LIST_NAME + "')/items";
-      await spRequest('POST', postUrl, payload, token);
+      // Create new item
+      const postUrl = 'https://graph.microsoft.com/v1.0/sites/' + siteId +
+        '/lists/' + SP_LIST_NAME + '/items';
+      await graphRequest('POST', postUrl, { fields }, token);
     }
     spLastSaved = json;
     const now = new Date();
