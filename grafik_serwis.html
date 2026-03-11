@@ -647,6 +647,61 @@
   .sync-status.error { color: #f87171; border-color: rgba(248,113,113,.3); background: rgba(248,113,113,.07); }
   .sync-status.saving{ color: #fbbf24; border-color: rgba(251,191,36,.3);  background: rgba(251,191,36,.07); }
 
+  /* LOGIN PAGE */
+  #page-login {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 48px 40px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 24px 64px rgba(0,0,0,.4);
+  }
+  .login-logo {
+    width: 72px; height: 72px;
+    background: var(--jd-yellow);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 2rem;
+  }
+  .login-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.6rem; font-weight: 800;
+    color: var(--text); margin-bottom: 4px;
+  }
+  .login-sub {
+    color: var(--text2); font-size: 0.85rem; margin-bottom: 32px;
+  }
+  .login-btn-ms {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 13px 20px;
+    background: #0078d4; color: #fff;
+    border: none; border-radius: 8px;
+    font-size: 0.95rem; font-weight: 600;
+    cursor: pointer; transition: background .15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .login-btn-ms:hover { background: #106ebe; }
+  .login-btn-local {
+    display: block; width: 100%; padding: 11px 20px;
+    background: none; color: var(--text2);
+    border: 1px solid var(--border); border-radius: 8px;
+    font-size: 0.85rem; cursor: pointer; margin-top: 10px;
+    transition: all .15s; font-family: 'DM Sans', sans-serif;
+  }
+  .login-btn-local:hover { color: var(--text); border-color: var(--accent2); }
+  .login-info {
+    margin-top: 24px; font-size: 0.75rem; color: var(--text2);
+    line-height: 1.5;
+  }
+
   /* SCROLLBAR */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -759,6 +814,31 @@
   Ustaw <code style="background:rgba(0,0,0,.3);padding:1px 5px;border-radius:3px">SP_SITE_URL</code>
   i <code style="background:rgba(0,0,0,.3);padding:1px 5px;border-radius:3px">SP_LIST_NAME</code> w pliku HTML (na g&oacute;rze sekcji &lt;script&gt;).
   <button onclick="document.getElementById('spConfigBanner').style.display='none'" style="margin-left:10px;background:none;border:1px solid #fde8d8;color:#fde8d8;border-radius:4px;padding:1px 7px;cursor:pointer">&#x2715;</button>
+</div>
+
+<!-- PAGE: LOGIN -->
+<div id="page-login" style="display:none">
+  <div class="login-card">
+    <div class="login-logo">🦌</div>
+    <div class="login-title">WANICKI</div>
+    <div class="login-sub">Grafik Działu Serwisu &mdash; Wola Piasecka</div>
+    <button class="login-btn-ms" onclick="loginWithMicrosoft()">
+      <svg width="20" height="20" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+        <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+        <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+        <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+      </svg>
+      Zaloguj przez Microsoft
+    </button>
+    <button class="login-btn-local" onclick="loginLocal()">
+      Pracuj lokalnie (bez zapisu do chmury)
+    </button>
+    <div class="login-info">
+      Dane s&#x105; zapisywane na li&#x15B;cie SharePoint.<br>
+      Wymagane konto Microsoft 365 firmy Wanicki.
+    </div>
+  </div>
 </div>
 
 <div id="page-schedule">
@@ -2056,37 +2136,65 @@ function initMsal() {
     try {
       const params = new URLSearchParams(hash.substring(1));
       const tok = params.get('access_token');
-      const exp = parseInt(params.get('expires_in') || '3600');
+      const exp = parseInt(params.get('expires_in') || '28800');
       if (tok) {
         sessionStorage.setItem('sp_token', tok);
-        sessionStorage.setItem('sp_token_exp', String(Date.now() + exp * 1000 - 60000));
+        sessionStorage.setItem('sp_token_exp', String(Date.now() + exp * 1000 - 300000)); // odnow 5min przed wygasnieciem
         history.replaceState(null, '', window.location.pathname);
         console.log('[SP] Token otrzymany z logowania');
+        scheduleTokenRefresh();
       }
     } catch(e) { console.error('[SP] Hash parse error:', e); }
   }
 }
 
+function scheduleTokenRefresh() {
+  const exp = parseInt(sessionStorage.getItem('sp_token_exp') || '0');
+  if (!exp) return;
+  const msUntilRefresh = exp - Date.now(); // refresh when 5min left (already baked in)
+  if (msUntilRefresh <= 0) return;
+  console.log('[SP] Token refresh za:', Math.round(msUntilRefresh/60000), 'minut');
+  setTimeout(() => {
+    console.log('[SP] Cichy refresh tokenu...');
+    // silent refresh przez ukryty iframe
+    const redirectUri = encodeURIComponent(window.location.href.split('#')[0]);
+    const scope = encodeURIComponent('https://graph.microsoft.com/Sites.ReadWrite.All openid profile');
+    const silentUrl = 'https://login.microsoftonline.com/' + AAD_TENANT_ID +
+      '/oauth2/v2.0/authorize' +
+      '?client_id=' + AAD_CLIENT_ID +
+      '&response_type=token' +
+      '&redirect_uri=' + redirectUri +
+      '&scope=' + scope +
+      '&response_mode=fragment' +
+      '&prompt=none';  // none = cichy, nie pokazuj UI
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = silentUrl;
+    iframe.onload = () => {
+      try {
+        const hash = iframe.contentWindow.location.hash;
+        if (hash && hash.includes('access_token')) {
+          const params = new URLSearchParams(hash.substring(1));
+          const tok = params.get('access_token');
+          const exp2 = parseInt(params.get('expires_in') || '28800');
+          sessionStorage.setItem('sp_token', tok);
+          sessionStorage.setItem('sp_token_exp', String(Date.now() + exp2 * 1000 - 300000));
+          console.log('[SP] Token odswiezony cicho');
+          scheduleTokenRefresh();
+        }
+      } catch(e) { /* cross-origin - normal if needs re-login */ }
+      document.body.removeChild(iframe);
+    };
+    document.body.appendChild(iframe);
+  }, msUntilRefresh);
+}
+
 async function getToken() {
   const tok = sessionStorage.getItem('sp_token');
   const exp = parseInt(sessionStorage.getItem('sp_token_exp') || '0');
-  if (tok && exp > Date.now()) {
-    console.log('[SP] Token z sessionStorage OK');
-    return tok;
-  }
-  // Brak tokenu - przekieruj do logowania
-  console.log('[SP] Brak tokenu - przekierowuje do logowania Microsoft...');
-  const redirectUri = encodeURIComponent(window.location.href.split('#')[0]);
-  const scope = encodeURIComponent('https://graph.microsoft.com/Sites.ReadWrite.All');
-  const loginUrl = 'https://login.microsoftonline.com/' + AAD_TENANT_ID +
-    '/oauth2/v2.0/authorize' +
-    '?client_id=' + AAD_CLIENT_ID +
-    '&response_type=token' +
-    '&redirect_uri=' + redirectUri +
-    '&scope=' + scope +
-    '&response_mode=fragment' +
-    '&prompt=select_account';
-  window.location.href = loginUrl;
+  if (tok && exp > Date.now()) return tok;
+  // Token wygasl - pokaz strone logowania
+  showLoginPage();
   return null;
 }
 
@@ -2216,6 +2324,45 @@ function scheduleSave() {
   if (!spReady) return;
   clearTimeout(spSaveTimer);
   spSaveTimer = setTimeout(() => spSave(false), 3000);
+}
+
+// ── LOGIN PAGE ─────────────────────────────────────────────────────────────────────────────
+
+function showLoginPage() {
+  document.getElementById('page-login').style.display = 'flex';
+  document.querySelector('header').style.display = 'none';
+  document.getElementById('spConfigBanner').style.display = 'none';
+  document.getElementById('page-schedule').style.display = 'none';
+  document.getElementById('page-mechanics').style.display = 'none';
+}
+
+function hideLoginPage() {
+  document.getElementById('page-login').style.display = 'none';
+  document.querySelector('header').style.display = '';
+  scheduleTokenRefresh(); // zaplanuj odswiezenie tokenu
+}
+
+function loginWithMicrosoft() {
+  const redirectUri = encodeURIComponent(window.location.href.split('#')[0]);
+  const scope = encodeURIComponent('https://graph.microsoft.com/Sites.ReadWrite.All openid profile');
+  const loginUrl = 'https://login.microsoftonline.com/' + AAD_TENANT_ID +
+    '/oauth2/v2.0/authorize' +
+    '?client_id=' + AAD_CLIENT_ID +
+    '&response_type=token' +
+    '&redirect_uri=' + redirectUri +
+    '&scope=' + scope +
+    '&response_mode=fragment' +
+    '&prompt=select_account';
+  window.location.href = loginUrl;
+}
+
+function loginLocal() {
+  hideLoginPage();
+  const local = localStorage.getItem('grafik_serwis_backup');
+  if (local) appStateFromJSON(local);
+  syncStatusSet('', 'Tryb lokalny');
+  syncNoTripsToEntries(); syncVacationsToEntries(); render(); updateGeoConflicts();
+  spReady = true;
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
