@@ -2045,43 +2045,49 @@ let spSaveTimer = null;
 let spConfigured = SP_SITE_URL !== '' && AAD_CLIENT_ID !== '';
 
 // ── MSAL konfiguracja ─────────────────────────────────────────────────────────
-let msalApp = null;
-let msalAccount = null;
+
+
 
 function initMsal() {
   if (!spConfigured) return;
-  msalApp = new msal.PublicClientApplication({
-    auth: {
-      clientId: AAD_CLIENT_ID,
-      authority: 'https://login.microsoftonline.com/' + AAD_TENANT_ID,
-      redirectUri: window.location.href.split('?')[0]
-    },
-    cache: { cacheLocation: 'sessionStorage' }
-  });
+  // Sprawdz czy wracamy po logowaniu (token w URL hash)
+  const hash = window.location.hash;
+  if (hash && hash.includes('access_token')) {
+    try {
+      const params = new URLSearchParams(hash.substring(1));
+      const tok = params.get('access_token');
+      const exp = parseInt(params.get('expires_in') || '3600');
+      if (tok) {
+        sessionStorage.setItem('sp_token', tok);
+        sessionStorage.setItem('sp_token_exp', String(Date.now() + exp * 1000 - 60000));
+        history.replaceState(null, '', window.location.pathname);
+        console.log('[SP] Token otrzymany z logowania');
+      }
+    } catch(e) { console.error('[SP] Hash parse error:', e); }
+  }
 }
 
 async function getToken() {
-  if (!msalApp) return null;
-  const scopes = [SP_SITE_URL + '/.default'];
-  // Try silent first
-  const accounts = msalApp.getAllAccounts();
-  if (accounts.length > 0) {
-    try {
-      const result = await msalApp.acquireTokenSilent({ scopes, account: accounts[0] });
-      msalAccount = accounts[0];
-      return result.accessToken;
-    } catch(e) { /* fall through to popup */ }
+  const tok = sessionStorage.getItem('sp_token');
+  const exp = parseInt(sessionStorage.getItem('sp_token_exp') || '0');
+  if (tok && exp > Date.now()) {
+    console.log('[SP] Token z sessionStorage OK');
+    return tok;
   }
-  // Popup login
-  try {
-    const result = await msalApp.acquireTokenPopup({ scopes });
-    msalAccount = result.account;
-    return result.accessToken;
-  } catch(e) {
-    syncStatusSet('error', 'Błąd logowania');
-    console.error('MSAL error:', e);
-    return null;
-  }
+  // Brak tokenu - przekieruj do logowania
+  console.log('[SP] Brak tokenu - przekierowuje do logowania Microsoft...');
+  const redirectUri = encodeURIComponent(window.location.href.split('#')[0]);
+  const scope = encodeURIComponent('https://graph.microsoft.com/Sites.ReadWrite.All');
+  const loginUrl = 'https://login.microsoftonline.com/' + AAD_TENANT_ID +
+    '/oauth2/v2.0/authorize' +
+    '?client_id=' + AAD_CLIENT_ID +
+    '&response_type=token' +
+    '&redirect_uri=' + redirectUri +
+    '&scope=' + scope +
+    '&response_mode=fragment' +
+    '&prompt=select_account';
+  window.location.href = loginUrl;
+  return null;
 }
 
 function syncStatusSet(state, text) {
