@@ -205,8 +205,6 @@
     padding: 20px 0 4px 0;
   }
 
-
-
   .day-header {
     background: var(--surface);
     border-radius: 8px;
@@ -251,8 +249,6 @@
     gap: 8px;
   }
 
-
-
   .row-label .mech-avatar { width: 28px; height: 28px; font-size: 0.7rem; }
   .row-label .mech-name { font-size: 0.82rem; }
 
@@ -267,6 +263,7 @@
   }
   .cell:hover { border-color: var(--accent2); }
   .cell.weekend { background: #161820; }
+  .cell.empty-workday { border-color: rgba(239,68,68,0.25); background: rgba(239,68,68,0.03); }
 
   .entry {
     border-radius: 6px;
@@ -379,6 +376,19 @@
     align-items: center;
     gap: 8px;
   }
+
+  /* ALERTY */
+  .alert-card {
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.8rem;
+    margin-bottom: 6px;
+    border: 1px solid;
+  }
+  .alert-card.alert-warn { background: #2a200a; border-color: #7a5010; color: #fcd34d; }
+  .alert-card.alert-danger { background: #2a1a1a; border-color: #5a2020; color: #fca5a5; }
+  .alert-card.alert-info { background: #0f1f2a; border-color: #1a3f5a; color: #93c5fd; }
+  .alert-card .alert-title { font-weight: 700; margin-bottom: 3px; }
 
   /* STATYSTYKI */
   .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -595,7 +605,7 @@
   }
   .vacation-row .rm-vac:hover { color: var(--danger); }
 
-  /* HOLIDAYS — full column effect */
+  /* HOLIDAYS */
   .day-header.holiday {
     border-color: #a855f7;
     background: rgba(168,85,247,.15);
@@ -646,6 +656,182 @@
   .sync-status.ok    { color: #4ade80; border-color: rgba(74,222,128,.3); background: rgba(74,222,128,.07); }
   .sync-status.error { color: #f87171; border-color: rgba(248,113,113,.3); background: rgba(248,113,113,.07); }
   .sync-status.saving{ color: #fbbf24; border-color: rgba(251,191,36,.3);  background: rgba(251,191,36,.07); }
+
+  /* ═══════════════════════════════════════════════
+     MONTHLY VIEW
+  ═══════════════════════════════════════════════ */
+  #page-month {
+    display: none;
+    padding: 24px 28px;
+    overflow-y: auto;
+    height: calc(100vh - 57px);
+  }
+
+  .month-header-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .month-nav {
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .month-nav button {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); width: 32px; height: 32px;
+    border-radius: 6px; cursor: pointer; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .month-nav button:hover { background: var(--border); }
+
+  .month-title {
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.3rem;
+    color: var(--text);
+  }
+
+  .month-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+  }
+
+  .month-day-header {
+    text-align: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.68rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text2);
+    padding: 8px 4px;
+    border-radius: 6px;
+    background: var(--surface);
+    margin-bottom: 3px;
+  }
+
+  .month-cell {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    min-height: 100px;
+    padding: 6px;
+    transition: border-color .15s;
+    cursor: pointer;
+    position: relative;
+  }
+  .month-cell:hover { border-color: var(--accent2); }
+  .month-cell.other-month { opacity: .35; }
+  .month-cell.today-month { border-color: var(--jd-yellow); background: rgba(255,222,0,0.05); }
+  .month-cell.weekend-month { background: #161820; }
+  .month-cell.holiday-month { background: rgba(168,85,247,.08); border-color: #a855f7; }
+
+  .month-cell-date {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--text2);
+    margin-bottom: 4px;
+  }
+  .month-cell.today-month .month-cell-date { color: var(--jd-yellow); }
+
+  .month-entry-chip {
+    display: block;
+    border-radius: 4px;
+    padding: 2px 5px;
+    font-size: 0.63rem;
+    font-weight: 600;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .month-entry-chip.type-wyjazd { background: #1a3518; color: #86d872; border-left: 2px solid var(--jd-green); }
+  .month-entry-chip.type-praca  { background: #223820; color: #ffe033; border-left: 2px solid #FFDE00; }
+  .month-entry-chip.type-urlop  { background: #3a2a0a; color: #fcd34d; border-left: 2px solid var(--warning); }
+  .month-entry-chip.type-choroba{ background: #3a1a1a; color: #fca5a5; border-left: 2px solid var(--danger); }
+
+  .month-more {
+    font-size: 0.62rem; color: var(--text2);
+    background: var(--surface2); border-radius: 3px;
+    padding: 1px 5px; display: inline-block; margin-top: 1px;
+  }
+
+  .month-mechanic-filter {
+    display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px;
+  }
+  .month-mech-chip {
+    display: flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 20px;
+    font-size: 0.75rem; font-weight: 600; cursor: pointer;
+    border: 2px solid transparent; transition: all .15s;
+    opacity: 0.5;
+  }
+  .month-mech-chip.active { opacity: 1; }
+  .month-mech-chip:hover { opacity: 0.85; }
+
+  /* ═══════════════════════════════════════════════
+     HISTORY VIEW
+  ═══════════════════════════════════════════════ */
+  #page-history {
+    display: none;
+    padding: 24px 28px;
+    overflow-y: auto;
+    height: calc(100vh - 57px);
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .history-item {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .history-item:last-child { border-bottom: none; }
+
+  .history-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem; flex-shrink: 0; margin-top: 2px;
+  }
+  .history-icon.add    { background: rgba(54,124,43,.2); border: 1px solid rgba(54,124,43,.4); }
+  .history-icon.delete { background: rgba(239,68,68,.2); border: 1px solid rgba(239,68,68,.4); }
+  .history-icon.edit   { background: rgba(59,130,246,.2); border: 1px solid rgba(59,130,246,.4); }
+  .history-icon.mech   { background: rgba(168,85,247,.2); border: 1px solid rgba(168,85,247,.4); }
+
+  .history-body { flex: 1; min-width: 0; }
+  .history-title { font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .history-meta  { font-size: 0.75rem; color: var(--text2); }
+  .history-time  { font-size: 0.72rem; color: var(--text2); white-space: nowrap; margin-top: 4px; }
+
+  .history-badge {
+    display: inline-block; border-radius: 4px; padding: 1px 7px;
+    font-size: 0.68rem; font-weight: 600; margin-right: 4px;
+  }
+  .history-badge.type-wyjazd { background: #1a3518; color: #86d872; }
+  .history-badge.type-praca  { background: #223820; color: #ffe033; }
+  .history-badge.type-urlop  { background: #3a2a0a; color: #fcd34d; }
+  .history-badge.type-choroba{ background: #3a1a1a; color: #fca5a5; }
+
+  .history-filter-bar {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .history-filter-btn {
+    padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text2); font-size: 0.78rem;
+    cursor: pointer; transition: all .15s;
+  }
+  .history-filter-btn:hover, .history-filter-btn.active {
+    border-color: var(--accent2); color: var(--text); background: rgba(74,156,58,.1);
+  }
+
+  /* NOTIFICATION BADGE on tab */
+  .notif-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--danger); color: #fff;
+    font-size: 0.6rem; font-weight: 700;
+    width: 16px; height: 16px; border-radius: 50%;
+    margin-left: 5px; vertical-align: middle;
+  }
 
   /* LOGIN PAGE */
   #page-login {
@@ -741,44 +927,34 @@
   body.light-mode .modal { background: #fff; }
   body.light-mode .form-input, body.light-mode .form-select { background: #f0f4ee; color: var(--text); }
   body.light-mode ::-webkit-scrollbar-thumb { background: #c8dcc0; }
+  body.light-mode .month-cell { background: #fff; }
+  body.light-mode .month-cell.weekend-month { background: #e4ede0; }
+  body.light-mode .month-entry-chip.type-wyjazd { background: #d4edcc; color: #1a4a12; }
+  body.light-mode .month-entry-chip.type-praca  { background: #fff9c4; color: #5a4400; }
+  body.light-mode .month-entry-chip.type-urlop  { background: #fef3c7; color: #78350f; }
+  body.light-mode .month-entry-chip.type-choroba{ background: #fee2e2; color: #7f1d1d; }
 </style>
 </head>
 <body>
 
 <header style="display:none">
   <div class="logo" style="display:flex;align-items:center;gap:14px">
-    <!-- John Deere official-style logo -->
     <svg width="52" height="52" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
       <rect width="200" height="200" rx="12" fill="#FFDE00"/>
-      <!-- Leaping deer silhouette - accurate JD style -->
       <g fill="#367C2B">
-        <!-- Body - main torso -->
         <path d="M55 130 C55 130 45 110 50 95 C55 80 70 75 85 78 C100 81 115 88 125 95 C135 102 140 112 135 122 C130 132 118 135 105 133 C92 131 78 132 68 130 Z"/>
-        <!-- Neck -->
         <path d="M118 90 C120 82 126 75 132 70 C136 67 140 68 138 74 C136 80 130 85 125 90 Z"/>
-        <!-- Head -->
         <path d="M130 68 C132 60 138 54 145 52 C150 50 153 53 151 58 C149 63 143 67 137 69 Z"/>
-        <!-- Snout/nose -->
         <path d="M148 55 C152 53 156 54 157 57 C158 60 155 62 151 61 Z"/>
-        <!-- Eye -->
         <circle cx="147" cy="56" r="2.5"/>
-        <!-- Ear -->
         <path d="M138 52 C140 45 145 42 148 44 C150 46 148 51 144 53 Z"/>
-        <!-- Antler left -->
         <path d="M140 50 C138 42 136 32 132 24 C130 20 128 22 129 26 C130 30 132 34 131 38 C130 42 127 44 128 40 C129 36 127 30 124 25 C122 21 119 22 120 26 C121 30 124 36 123 42 C122 46 120 48 121 45 C122 42 120 36 117 32 C115 28 113 30 114 34 L117 44 L122 50 L132 52 Z"/>
-        <!-- Antler right (partial, behind) -->
         <path d="M145 48 C147 40 150 32 154 26 C156 22 158 24 157 28 C156 32 153 37 154 42 C155 45 157 46 155 43 C153 40 154 34 156 30 C158 26 160 28 159 32 L156 44 L148 50 Z"/>
-        <!-- Front right leg (raised/leaping) -->
         <path d="M120 128 C122 120 126 112 128 104 C130 98 128 94 125 96 C122 98 120 106 119 114 C118 120 118 126 120 128 Z"/>
-        <!-- Front left leg -->
         <path d="M105 133 C105 125 104 116 102 108 C100 101 97 98 95 101 C93 104 94 112 96 120 C98 127 101 132 105 133 Z"/>
-        <!-- Back right leg (extended back) -->
         <path d="M68 130 C64 122 58 114 54 107 C51 102 49 103 50 108 C51 113 55 120 58 127 C61 132 65 134 68 130 Z"/>
-        <!-- Back left leg -->
         <path d="M80 132 C78 124 75 115 72 108 C70 103 67 103 68 108 C69 113 71 121 73 128 C75 133 78 135 80 132 Z"/>
-        <!-- Tail -->
         <path d="M57 100 C52 95 48 88 50 83 C52 78 57 80 60 86 C63 92 62 98 57 100 Z"/>
-        <!-- Belly line for shape -->
         <path d="M58 122 C65 118 78 116 92 117 C106 118 118 122 125 126 C118 130 105 132 90 131 C75 130 63 127 58 122 Z" fill="#2d6b24"/>
       </g>
     </svg>
@@ -787,7 +963,7 @@
       <div style="font-size:0.68rem;color:#7a9a72;letter-spacing:0.08em;text-transform:uppercase;margin-top:2px">Oddział Wola Piasecka</div>
     </div>
   </div>
-  <div class="week-nav">
+  <div class="week-nav" id="weekNavBar">
     <button id="prevWeek">&#8592;</button>
     <div class="week-label" id="weekLabel"></div>
     <button id="nextWeek">&#8594;</button>
@@ -796,7 +972,9 @@
   </div>
   <nav class="main-nav" id="mainNav">
     <button class="nav-tab active" data-page="schedule" onclick="switchPage('schedule')">📅 Grafik</button>
+    <button class="nav-tab" data-page="month" onclick="switchPage('month')">🗓 Miesiąc</button>
     <button class="nav-tab" data-page="mechanics" onclick="switchPage('mechanics')">👷 Mechanicy</button>
+    <button class="nav-tab" data-page="history" onclick="switchPage('history')">📋 Historia</button>
   </nav>
   <div class="header-actions" id="scheduleActions" style="display:flex;align-items:center;gap:8px">
     <div id="syncStatus" class="sync-status"><span id="syncIcon">&#x23F3;</span><span id="syncText">Inicjalizacja...</span></div>
@@ -808,13 +986,13 @@
     <div id="syncStatus2" class="sync-status"><span id="syncIcon2">&#x23F3;</span><span id="syncText2">Inicjalizacja...</span></div>
     <button class="btn btn-primary" onclick="openNewMechModal()">+ Dodaj mechanika</button>
   </div>
+  <div class="header-actions" id="monthActions" style="display:none;align-items:center;gap:8px">
+    <div class="sync-status ok" style="font-size:0.72rem">🗓 Widok miesięczny</div>
+  </div>
+  <div class="header-actions" id="historyActions" style="display:none;align-items:center;gap:8px">
+    <button class="btn btn-danger" onclick="clearHistory()" style="font-size:0.75rem;padding:5px 12px">🗑 Wyczyść historię</button>
+  </div>
 </header>
-<div id="spConfigBanner" style="background:#7c2d12;color:#fde8d8;padding:7px 20px;font-size:0.78rem;text-align:center;border-bottom:1px solid #c2410c">
-  &#x2699;&#xFE0F; <strong>Wymagana konfiguracja SharePoint:</strong>
-  Ustaw <code style="background:rgba(0,0,0,.3);padding:1px 5px;border-radius:3px">SP_SITE_URL</code>
-  i <code style="background:rgba(0,0,0,.3);padding:1px 5px;border-radius:3px">SP_LIST_NAME</code> w pliku HTML (na g&oacute;rze sekcji &lt;script&gt;).
-  <button onclick="document.getElementById('spConfigBanner').style.display='none'" style="margin-left:10px;background:none;border:1px solid #fde8d8;color:#fde8d8;border-radius:4px;padding:1px 7px;cursor:pointer">&#x2715;</button>
-</div>
 
 <!-- PAGE: LOGIN -->
 <div id="page-login" style="display:flex">
@@ -841,6 +1019,7 @@
   </div>
 </div>
 
+<!-- PAGE: SCHEDULE -->
 <div id="page-schedule">
 <div class="main-layout">
   <div class="sidebar">
@@ -857,6 +1036,11 @@
   </div>
 
   <div class="right-panel">
+    <!-- ALERTY SECTION -->
+    <div>
+      <div class="panel-section-title" id="alertsTitle">🔔 Alerty <span id="alertCount"></span></div>
+      <div id="alertsList"></div>
+    </div>
     <div>
       <div class="panel-section-title">⚠ Konflikty wyjazdów <span style="font-size:0.65rem;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:1px 5px;margin-left:4px">promień 20 km</span></div>
       <div class="conflict-list" id="conflictList"></div>
@@ -875,9 +1059,25 @@
     </div>
   </div>
 </div>
-</div><!-- /page-schedule -->
+</div>
 
-<!-- PAGE: MECHANICY -->
+<!-- PAGE: MONTH -->
+<div id="page-month">
+  <div class="month-header-row">
+    <div class="month-nav">
+      <button onclick="monthOffset--;renderMonth()">&#8592;</button>
+      <div class="month-title" id="monthTitle"></div>
+      <button onclick="monthOffset++;renderMonth()">&#8594;</button>
+      <button class="btn btn-secondary" onclick="monthOffset=0;renderMonth()" style="font-size:0.78rem;padding:5px 12px;margin-left:6px">Dziś</button>
+    </div>
+    <div style="font-size:0.8rem;color:var(--text2)">Kliknij dzień aby przejść do grafiku tygodniowego</div>
+  </div>
+  <div class="month-mechanic-filter" id="monthMechFilter"></div>
+  <div class="month-grid" id="monthDayHeaders"></div>
+  <div class="month-grid" id="monthGrid"></div>
+</div>
+
+<!-- PAGE: MECHANICS -->
 <div id="page-mechanics" style="display:none;padding:28px;max-width:1100px;margin:0 auto">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
     <div>
@@ -886,6 +1086,30 @@
     </div>
   </div>
   <div id="mechCardsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px"></div>
+</div>
+
+<!-- PAGE: HISTORY -->
+<div id="page-history">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+    <div>
+      <h2 style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800">📋 Historia zmian</h2>
+      <p style="color:var(--text2);font-size:0.85rem;margin-top:4px">Wszystkie zmiany w grafiku</p>
+    </div>
+    <div id="historyCount" style="font-size:0.8rem;color:var(--text2)"></div>
+  </div>
+  <div class="history-filter-bar" id="historyFilterBar">
+    <span style="font-size:0.78rem;color:var(--text2);margin-right:4px">Filtruj:</span>
+    <button class="history-filter-btn active" data-filter="all" onclick="setHistoryFilter('all')">Wszystkie</button>
+    <button class="history-filter-btn" data-filter="add" onclick="setHistoryFilter('add')">➕ Dodano</button>
+    <button class="history-filter-btn" data-filter="delete" onclick="setHistoryFilter('delete')">🗑 Usunięto</button>
+    <button class="history-filter-btn" data-filter="edit" onclick="setHistoryFilter('edit')">✏️ Edytowano</button>
+    <button class="history-filter-btn" data-filter="mech" onclick="setHistoryFilter('mech')">👷 Mechanicy</button>
+  </div>
+  <div id="historyList"></div>
+  <div id="historyEmpty" style="display:none;text-align:center;padding:60px 20px;color:var(--text2)">
+    <div style="font-size:2rem;margin-bottom:10px">📭</div>
+    <div>Brak historii zmian</div>
+  </div>
 </div>
 
 <!-- MODAL EDYTUJ MECHANIKA -->
@@ -959,7 +1183,7 @@
         <span id="citySearchSpinner" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:0.8rem;color:var(--text2)">⏳</span>
         <div id="citySuggestions" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;z-index:2000;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.4)"></div>
       </div>
-      <div id="citySelected" style="display:none;margin-top:6px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:8px;padding:8px 12px;font-size:0.82rem;display:none;align-items:center;gap:8px">
+      <div id="citySelected" style="display:none;margin-top:6px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:8px;padding:8px 12px;font-size:0.82rem;align-items:center;gap:8px">
         <span style="flex:1" id="citySelectedLabel"></span>
         <button onclick="clearCitySelection()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:0.9rem;padding:0 2px">✕</button>
       </div>
@@ -1037,33 +1261,366 @@ let mechanics = [
 
 let entries = [];
 
-function e() { return Math.random().toString(36).slice(2); }
+// ── HISTORY ───────────────────────────────────────────────────────────────────
+let changeHistory = [];
+const MAX_HISTORY = 200;
+let historyFilter = 'all';
+let currentUser = 'Lokalny'; // will be set after login
 
-const TYPES = [
-  {key:'wyjazd', label:'🚗 Wyjazd', icon:'🚗'},
-  {key:'praca',  label:'🔧 Praca w warsztacie', icon:'🔧'},
-  {key:'urlop',  label:'🌴 Urlop', icon:'🌴'},
-  {key:'choroba',label:'🤒 Choroba', icon:'🤒'},
-];
+function logHistory(action, details) {
+  const now = new Date();
+  const record = {
+    id: Math.random().toString(36).slice(2),
+    action, // 'add' | 'delete' | 'edit' | 'mech_add' | 'mech_delete' | 'mech_edit'
+    details,
+    user: currentUser,
+    timestamp: now.toISOString(),
+    ts: now.getTime()
+  };
+  changeHistory.unshift(record);
+  if (changeHistory.length > MAX_HISTORY) changeHistory = changeHistory.slice(0, MAX_HISTORY);
+  updateHistoryBadge();
+}
 
-const DAYS_PL = ['Pon','Wt','Śr','Czw','Pt','Sob','Nd'];
-const DAYS_FULL = ['Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota','Niedziela'];
+function updateHistoryBadge() {
+  // No badge on tab — just keep count updated
+}
 
-let weekOffset = 0;
-let editingEntry = null;
-let prefillMech = null, prefillDay = null;
+function clearHistory() {
+  if (!confirm('Na pewno wyczyścić całą historię zmian?')) return;
+  changeHistory = [];
+  renderHistory();
+}
+
+function setHistoryFilter(f) {
+  historyFilter = f;
+  document.querySelectorAll('.history-filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === f));
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  const empty = document.getElementById('historyEmpty');
+  const countEl = document.getElementById('historyCount');
+
+  const typeMap = {
+    'add':         { icon:'➕', cls:'add',    label:'Dodano wpis' },
+    'delete':      { icon:'🗑', cls:'delete', label:'Usunięto wpis' },
+    'edit':        { icon:'✏️', cls:'edit',   label:'Edytowano wpis' },
+    'mech_add':    { icon:'👷', cls:'mech',   label:'Dodano mechanika' },
+    'mech_delete': { icon:'👷', cls:'delete', label:'Usunięto mechanika' },
+    'mech_edit':   { icon:'👷', cls:'mech',   label:'Edytowano mechanika' },
+  };
+
+  const filterMap = {
+    'all':    () => true,
+    'add':    r => r.action === 'add',
+    'delete': r => r.action === 'delete' || r.action === 'mech_delete',
+    'edit':   r => r.action === 'edit',
+    'mech':   r => r.action.startsWith('mech_'),
+  };
+
+  const filtered = changeHistory.filter(filterMap[historyFilter] || (() => true));
+  countEl.textContent = `${filtered.length} / ${changeHistory.length} wpisów`;
+
+  if (filtered.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  list.innerHTML = filtered.map(r => {
+    const tm = typeMap[r.action] || { icon:'📝', cls:'edit', label: r.action };
+    const d = r.details;
+    const typeLabel = d.type ? `<span class="history-badge type-${d.type}">${TYPES.find(t=>t.key===d.type)?.label||d.type}</span>` : '';
+    const mechName = d.mechName || '';
+    const day = d.day !== undefined ? DAYS_FULL[d.day] : '';
+    const city = d.city ? ` → ${d.city}` : '';
+    const order = d.order ? ` · 📋 ${d.order}` : '';
+    const note = d.note ? ` · ${d.note}` : '';
+
+    let title = tm.label;
+    let meta = '';
+    if (r.action === 'add' || r.action === 'edit' || r.action === 'delete') {
+      title = `${tm.label}: ${mechName}`;
+      meta = `${typeLabel}${day}${city}${order}${note}`;
+    } else if (r.action.startsWith('mech_')) {
+      title = `${tm.label}: ${d.mechName}`;
+      meta = d.spec || '';
+    }
+
+    const dt = new Date(r.timestamp);
+    const timeStr = `${dt.getDate()}.${dt.getMonth()+1}.${dt.getFullYear()} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+
+    return `<div class="history-item">
+      <div class="history-icon ${tm.cls}">${tm.icon}</div>
+      <div class="history-body">
+        <div class="history-title">${title}</div>
+        ${meta ? `<div class="history-meta">${meta}</div>` : ''}
+      </div>
+      <div class="history-time">${timeStr}<br><span style="font-size:0.68rem">${r.user}</span></div>
+    </div>`;
+  }).join('');
+}
+
+// ── ALERTS ────────────────────────────────────────────────────────────────────
+
+function computeAlerts() {
+  const alerts = [];
+  const dates = getWeekDates(weekOffset);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const wEntries = entries.filter(e => e.week===undefined || e.week===weekOffset);
+
+  // 1. Mechanik bez wpisu w dni robocze (pon-pt, nie święta)
+  mechanics.forEach(m => {
+    for (let dayIdx = 0; dayIdx <= 4; dayIdx++) {
+      const cellDate = dates[dayIdx];
+      if (!cellDate) continue;
+      const isHoliday = !!getHolidays(cellDate.getFullYear())[dateKey(cellDate)];
+      if (isHoliday) continue;
+      const hasEntry = wEntries.some(en => en.mechId === m.id && en.day === dayIdx);
+      if (!hasEntry) {
+        alerts.push({
+          type: 'info',
+          title: `${m.name.split(' ')[0]} — brak wpisu`,
+          detail: `${DAYS_FULL[dayIdx]} nie ma przypisanego zadania`,
+          day: dayIdx
+        });
+      }
+    }
+  });
+
+  // 2. Urlop się kończy w ciągu 3 dni
+  const in3days = new Date(today); in3days.setDate(today.getDate() + 3);
+  mechanics.forEach(m => {
+    (m.vacations || []).forEach(v => {
+      if (!v.to) return;
+      const toDate = new Date(v.to + 'T00:00:00');
+      if (toDate >= today && toDate <= in3days) {
+        alerts.push({
+          type: 'warn',
+          title: `Koniec urlopu: ${m.name.split(' ')[0]}`,
+          detail: `Urlop kończy się ${fmtDateStr(v.to)}${v.label ? ' (' + v.label + ')' : ''}`
+        });
+      }
+    });
+  });
+
+  // 3. Zduplikowane numery zleceń
+  const orderMap = {};
+  wEntries.forEach(en => {
+    if (!en.order) return;
+    const key = en.order.trim().toUpperCase();
+    if (!orderMap[key]) orderMap[key] = [];
+    orderMap[key].push(en);
+  });
+  Object.entries(orderMap).forEach(([orderNum, ens]) => {
+    if (ens.length > 1) {
+      const names = ens.map(en => mechanics.find(m=>m.id===en.mechId)?.name?.split(' ')[0] || '?');
+      alerts.push({
+        type: 'danger',
+        title: `Duplikat zlecenia: ${orderNum}`,
+        detail: `Przypisane do: ${names.join(', ')}`
+      });
+    }
+  });
+
+  return alerts;
+}
+
+function renderAlerts() {
+  const alerts = computeAlerts();
+  const list = document.getElementById('alertsList');
+  const title = document.getElementById('alertsTitle');
+
+  // Limit displayed alerts
+  const urgent = alerts.filter(a => a.type === 'danger');
+  const warn    = alerts.filter(a => a.type === 'warn');
+  const info    = alerts.filter(a => a.type === 'info');
+
+  // Show badge count for important ones only
+  const importantCount = urgent.length + warn.length;
+  if (importantCount > 0) {
+    title.innerHTML = `🔔 Alerty <span class="notif-badge">${importantCount}</span>`;
+  } else {
+    title.innerHTML = `🔔 Alerty`;
+  }
+
+  if (alerts.length === 0) {
+    list.innerHTML = `<div style="color:var(--text2);font-size:0.78rem;padding:8px 10px;background:var(--surface2);border-radius:8px;text-align:center">✅ Brak alertów</div>`;
+    return;
+  }
+
+  // Show only urgent + warn + first few info
+  const toShow = [...urgent, ...warn, ...info.slice(0, 3)];
+  const hiddenCount = alerts.length - toShow.length;
+
+  list.innerHTML = toShow.map(a => `
+    <div class="alert-card alert-${a.type}">
+      <div class="alert-title">${a.type==='danger'?'🔴':a.type==='warn'?'🟡':'🔵'} ${a.title}</div>
+      <div style="opacity:.8;font-size:0.75rem;margin-top:2px">${a.detail}</div>
+    </div>
+  `).join('') + (hiddenCount > 0 ? `<div style="text-align:center;font-size:0.75rem;color:var(--text2);padding:4px">+${hiddenCount} więcej alertów info</div>` : '');
+}
+
+// ── MONTHLY VIEW ───────────────────────────────────────────────────────────────
+
+let monthOffset = 0;
+let monthFilterMechs = new Set(); // empty = all
+
+function getMonthYear(offset) {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + offset);
+  return { year: d.getFullYear(), month: d.getMonth() };
+}
+
+const MONTHS_PL = ['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
+
+function renderMonthMechFilter() {
+  const bar = document.getElementById('monthMechFilter');
+  bar.innerHTML = mechanics.map(m => {
+    const [bg, fg] = getColor(m.id);
+    const active = monthFilterMechs.size === 0 || monthFilterMechs.has(m.id);
+    return `<div class="month-mech-chip ${active?'active':''}" style="background:${bg}22;border-color:${bg};color:${bg}" onclick="toggleMonthMech(${m.id})" title="${m.name}">
+      <div style="width:8px;height:8px;border-radius:50%;background:${bg};flex-shrink:0"></div>
+      ${m.name.split(' ')[0]}
+    </div>`;
+  }).join('');
+}
+
+function toggleMonthMech(id) {
+  if (monthFilterMechs.has(id)) {
+    monthFilterMechs.delete(id);
+  } else {
+    monthFilterMechs.add(id);
+  }
+  renderMonthMechFilter();
+  renderMonthGrid();
+}
+
+function renderMonth() {
+  const { year, month } = getMonthYear(monthOffset);
+  document.getElementById('monthTitle').textContent = `${MONTHS_PL[month]} ${year}`;
+
+  // Day headers
+  const daysHdr = document.getElementById('monthDayHeaders');
+  daysHdr.innerHTML = ['Pon','Wt','Śr','Czw','Pt','Sob','Nd'].map(d =>
+    `<div class="month-day-header">${d}</div>`
+  ).join('');
+
+  renderMonthMechFilter();
+  renderMonthGrid();
+}
+
+function renderMonthGrid() {
+  const { year, month } = getMonthYear(monthOffset);
+  const grid = document.getElementById('monthGrid');
+  const firstDay = new Date(year, month, 1);
+  const lastDay  = new Date(year, month+1, 0);
+  const holidays = getHolidays(year);
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // Start from Monday of the week containing the 1st
+  let startDow = firstDay.getDay(); // 0=Sun
+  if (startDow === 0) startDow = 7;
+  const start = new Date(firstDay);
+  start.setDate(start.getDate() - (startDow - 1));
+
+  // End at Sunday of the week containing last day
+  let endDow = lastDay.getDay();
+  if (endDow === 0) endDow = 7;
+  const end = new Date(lastDay);
+  end.setDate(end.getDate() + (7 - endDow));
+
+  const cells = [];
+  const cur = new Date(start);
+  while (cur <= end) {
+    cells.push(new Date(cur));
+    cur.setDate(cur.getDate() + 1);
+  }
+
+  // Compute week offset for each date
+  function getWeekOffsetForDate(d) {
+    const mon = getMonday(0);
+    const diffMs = d - mon;
+    const diffDays = Math.floor(diffMs / 86400000);
+    return Math.floor(diffDays / 7);
+  }
+
+  function getDayIdxInWeek(d) {
+    let dow = d.getDay();
+    if (dow === 0) dow = 7;
+    return dow - 1; // Mon=0..Sun=6
+  }
+
+  const filteredMechs = monthFilterMechs.size > 0
+    ? mechanics.filter(m => monthFilterMechs.has(m.id))
+    : mechanics;
+
+  grid.innerHTML = cells.map(d => {
+    const otherMonth = d.getMonth() !== month;
+    const isToday2 = d.getTime() === today.getTime();
+    const hKey = dateKey(d);
+    const isHoliday = !!holidays[hKey];
+    const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+    const wOff = getWeekOffsetForDate(d);
+    const dayIdx = getDayIdxInWeek(d);
+
+    // Get entries for this day
+    const dayEntries = entries.filter(en => {
+      const enWeek = en.week === undefined ? 0 : en.week;
+      return enWeek === wOff && en.day === dayIdx &&
+        (monthFilterMechs.size === 0 || monthFilterMechs.has(en.mechId));
+    });
+
+    const MAX_CHIPS = 3;
+    const chips = dayEntries.slice(0, MAX_CHIPS).map(en => {
+      const m = mechanics.find(x => x.id === en.mechId);
+      const firstName = m ? m.name.split(' ')[0] : '?';
+      const icon = TYPES.find(t=>t.key===en.type)?.icon || '';
+      const label = en.city ? `${firstName}: ${en.city}` : `${firstName}: ${en.type}`;
+      return `<span class="month-entry-chip type-${en.type}" title="${label}">${icon} ${label}</span>`;
+    }).join('');
+
+    const more = dayEntries.length > MAX_CHIPS
+      ? `<span class="month-more">+${dayEntries.length - MAX_CHIPS} więcej</span>` : '';
+
+    const classes = [
+      'month-cell',
+      otherMonth ? 'other-month' : '',
+      isToday2 ? 'today-month' : '',
+      isWeekend && !isHoliday ? 'weekend-month' : '',
+      isHoliday ? 'holiday-month' : ''
+    ].filter(Boolean).join(' ');
+
+    return `<div class="${classes}" onclick="goToWeekOfDate('${d.toISOString().slice(0,10)}')" title="${isHoliday ? holidays[hKey] : ''}">
+      <div class="month-cell-date">${d.getDate()}${isHoliday ? ' 🎉' : ''}</div>
+      ${chips}${more}
+    </div>`;
+  }).join('');
+}
+
+function goToWeekOfDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const mon = getMonday(0);
+  const diffMs = d - mon;
+  const diffDays = Math.floor(diffMs / 86400000);
+  weekOffset = Math.floor(diffDays / 7);
+  switchPage('schedule');
+}
 
 // ── POLISH HOLIDAYS ──────────────────────────────────────────────────────────
 
 function easterDate(year) {
-  // Anonymous Gregorian algorithm
   const a = year % 19, b = Math.floor(year/100), c = year % 100;
   const d = Math.floor(b/4), e = b % 4, f = Math.floor((b+8)/25);
   const g = Math.floor((b-f+1)/3), h = (19*a+b-d-g+15) % 30;
   const i = Math.floor(c/4), k = c % 4;
   const l = (32+2*e+2*i-h-k) % 7;
   const m = Math.floor((a+11*h+22*l)/451);
-  const month = Math.floor((h+l-7*m+114)/31); // 1-based
+  const month = Math.floor((h+l-7*m+114)/31);
   const day   = ((h+l-7*m+114) % 31) + 1;
   return new Date(year, month-1, day);
 }
@@ -1075,35 +1632,22 @@ function getPolishHolidays(year) {
   const corpusChristi = new Date(easter); corpusChristi.setDate(easter.getDate()+60);
 
   const fixed = [
-    [1,  1,  'Nowy Rok'],
-    [1,  6,  'Trzech Króli'],
-    [5,  1,  'Święto Pracy'],
-    [5,  3,  'Święto Konstytucji'],
-    [8,  15, 'Wniebowzięcie NMP'],
-    [11, 1,  'Wszystkich Świętych'],
-    [11, 11, 'Święto Niepodległości'],
-    [12, 25, 'Boże Narodzenie'],
-    [12, 26, 'Drugi dzień Bożego Narodzenia'],
+    [1,1,'Nowy Rok'],[1,6,'Trzech Króli'],[5,1,'Święto Pracy'],
+    [5,3,'Święto Konstytucji'],[8,15,'Wniebowzięcie NMP'],
+    [11,1,'Wszystkich Świętych'],[11,11,'Święto Niepodległości'],
+    [12,25,'Boże Narodzenie'],[12,26,'Drugi dzień Bożego Narodzenia'],
   ];
   const holidays = {};
   fixed.forEach(([m,d,name]) => {
-    const key = `${year}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    holidays[key] = name;
+    holidays[`${year}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`] = name;
   });
-  const movable = [
-    [easter,       'Wielkanoc'],
-    [easterMonday, 'Poniedziałek Wielkanocny'],
-    [whitSunday,   'Zielone Świątki'],
-    [corpusChristi,'Boże Ciało'],
-  ];
-  movable.forEach(([date, name]) => {
-    const key = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
-    holidays[key] = name;
+  [[easter,'Wielkanoc'],[easterMonday,'Poniedziałek Wielkanocny'],
+   [whitSunday,'Zielone Świątki'],[corpusChristi,'Boże Ciało']].forEach(([date,name]) => {
+    holidays[`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`] = name;
   });
   return holidays;
 }
 
-// Cache holidays per year
 const holidayCache = {};
 function getHolidays(year) {
   if (!holidayCache[year]) holidayCache[year] = getPolishHolidays(year);
@@ -1176,7 +1720,6 @@ function renderGrid() {
   document.getElementById('weekLabel').textContent =
     `${fmtDate(mon)} – ${fmtDate(sun)} ${sun.getFullYear()}`;
 
-  // Header
   const hdr = document.getElementById('gridHeader');
   hdr.innerHTML = `<div></div>` + dates.map((d,i)=>{
     const hKey = dateKey(d);
@@ -1189,10 +1732,6 @@ function renderGrid() {
     </div>`;
   }).join('');
 
-  // Body
-  // Mark holiday columns on body rows via data attribute
-  const holidayCols = dates.map((d,i) => !!getHolidays(d.getFullYear())[dateKey(d)]);
-
   const body = document.getElementById('gridBody');
   body.innerHTML = mechanics.map(m => {
     const [bg, fg] = getColor(m.id);
@@ -1201,12 +1740,13 @@ function renderGrid() {
       const cellDate = dates[dayIdx];
       const cellHoliday = cellDate ? (getHolidays(cellDate.getFullYear())[dateKey(cellDate)] || null) : null;
       const isWeekend = dayIdx >= 5;
-      const classes = ['cell', isWeekend?'weekend':'', cellHoliday?'holiday':''].filter(Boolean).join(' ');
+      const hasNoEntry = !cellHoliday && !isWeekend && dayEntries.length === 0;
+      const classes = ['cell', isWeekend?'weekend':'', cellHoliday?'holiday':'', hasNoEntry?'empty-workday':''].filter(Boolean).join(' ');
       return `<div class="${classes}" data-mech="${m.id}" data-day="${dayIdx}" title="${cellHoliday||''}">
         ${dayEntries.map(en => {
           const isConflict = geoConflictIds.has(en.id);
           const icon = TYPES.find(t=>t.key===en.type)?.icon||'';
-          return `<div class="entry type-${en.type} ${isConflict?'conflict':''}" data-id="${en.id}" title="${isConflict?'⚠ Konflikt wyjazdu!':''}">
+          return `<div class="entry type-${en.type} ${isConflict?'conflict':''}" data-id="${en.id}" title="${isConflict?'⚠ Konflikt wyjazdu!':''}" ondblclick="openModal(${m.id},${dayIdx},'${en.id}')">
             <button class="del-btn" onclick="deleteEntry('${en.id}',event)">✕</button>
             ${en.priority && en.priority!=="normal" ? `<span class="priority-dot ${en.priority}"></span>` : ""}
             <span class="entry-icon">${icon}</span>
@@ -1235,7 +1775,7 @@ function getConflicts() { return getConflictDetails(); }
 
 // ── GEO CACHE & DISTANCE ─────────────────────────────────────────────────────
 
-const geoCache = {}; // city -> {lat, lon} or null
+const geoCache = {};
 
 async function geocode(city) {
   const key = city.toLowerCase().trim();
@@ -1264,14 +1804,11 @@ function haversine(a, b) {
 }
 
 const CONFLICT_RADIUS_KM = 20;
-
-// Geo conflicts are stored here after async check
 let geoConflictIds = new Set();
-let geoConflictDetails = []; // [{ids, day, cities, mechs, dist}]
+let geoConflictDetails = [];
 
 async function updateGeoConflicts() {
   const trips = entries.filter(en => en.type==='wyjazd' && en.city && (en.week===undefined || en.week===weekOffset));
-  // Geocode all unique cities
   const cities = [...new Set(trips.map(en=>en.city.toLowerCase().trim()))];
   await Promise.all(cities.map(c => geocode(c)));
 
@@ -1290,7 +1827,6 @@ async function updateGeoConflicts() {
         dist = haversine(gA, gB);
         conflict = dist <= CONFLICT_RADIUS_KM;
       } else {
-        // fallback: exact city name match
         conflict = similarCityFallback(a.city, b.city);
       }
       if (conflict) {
@@ -1304,12 +1840,7 @@ async function updateGeoConflicts() {
           if (!existing.mechs.includes(mA)) existing.mechs.push(mA);
           if (!existing.mechs.includes(mB)) existing.mechs.push(mB);
         } else {
-          details.push({
-            ids:[a.id,b.id], day:a.day,
-            cities:[a.city, b.city],
-            mechs:[mA, mB],
-            dist: dist ? Math.round(dist) : null
-          });
+          details.push({ ids:[a.id,b.id], day:a.day, cities:[a.city,b.city], mechs:[mA,mB], dist:dist?Math.round(dist):null });
         }
       }
     }
@@ -1325,15 +1856,12 @@ function similarCityFallback(a, b) {
   return normalize(a)===normalize(b);
 }
 
-function similarCity(a, b) {
-  return similarCityFallback(a, b);
-}
-
 function getConflictIds() { return geoConflictIds; }
 function getConflictDetails() { return geoConflictDetails; }
 
 function renderRightPanel() {
-  // Konflikty
+  renderAlerts();
+
   const conflicts = getConflicts();
   const cl = document.getElementById('conflictList');
   if (conflicts.length===0) {
@@ -1350,7 +1878,6 @@ function renderRightPanel() {
       </div>`).join('');
   }
 
-  // Stats
   const wEntries = entries.filter(e=>e.week===undefined || e.week===weekOffset);
   const trips = wEntries.filter(e=>e.type==='wyjazd').length;
   const work  = wEntries.filter(e=>e.type==='praca').length;
@@ -1363,11 +1890,7 @@ function renderRightPanel() {
     <div class="stat-card"><div class="stat-num" style="color:var(--danger)">${sick}</div><div class="stat-label">Choroby</div></div>
   `;
 
-  // ── Optymalizacja tras ──────────────────────────────────────────────────────
-  // Find cities visited multiple times in this week by different people or on different days
   const weekTrips = entries.filter(en => en.type==='wyjazd' && en.city && (en.week===undefined || en.week===weekOffset));
-
-  // Group by normalized city name (using geo proximity if cached)
   const cityGroups = {};
   weekTrips.forEach(en => {
     const key = en.city.toLowerCase().trim().split(/[\s,]+/)[0];
@@ -1375,23 +1898,20 @@ function renderRightPanel() {
     cityGroups[key].entries.push(en);
   });
 
-  // Also merge geo-close cities into same group
   const cityKeys = Object.keys(cityGroups);
   for (let i = 0; i < cityKeys.length; i++) {
     for (let j = i+1; j < cityKeys.length; j++) {
+      if (!cityGroups[cityKeys[j]]) continue;
       const gA = geoCache[cityGroups[cityKeys[i]].entries[0].city.toLowerCase().trim()];
       const gB = geoCache[cityGroups[cityKeys[j]].entries[0].city.toLowerCase().trim()];
       if (gA && gB && haversine(gA, gB) <= CONFLICT_RADIUS_KM) {
-        // merge j into i
         cityGroups[cityKeys[i]].entries.push(...cityGroups[cityKeys[j]].entries);
-        cityGroups[cityKeys[i]].city = cityGroups[cityKeys[i]].city; // keep first city name
         delete cityGroups[cityKeys[j]];
       }
     }
   }
 
   const optims = Object.values(cityGroups).filter(g => {
-    // Only show if: multiple entries AND they are on different days (optimization opportunity)
     const days = [...new Set(g.entries.map(en => en.day))];
     return g.entries.length >= 2 && days.length >= 2;
   }).sort((a,b) => b.entries.length - a.entries.length);
@@ -1408,30 +1928,23 @@ function renderRightPanel() {
         const col = getColor(en.mechId);
         const bg = col[0], fg = col[1];
         const firstName = mx ? mx.name.split(' ')[0] : '?';
-        const orderTag = en.order
-          ? '<span style="color:var(--jd-yellow);margin-left:auto;font-size:0.68rem">\u{1F4CB} ' + en.order + '</span>'
-          : '';
+        const orderTag = en.order ? '<span style="color:var(--jd-yellow);margin-left:auto;font-size:0.68rem">📋 ' + en.order + '</span>' : '';
         return '<div style="display:flex;align-items:center;gap:7px;font-size:0.75rem;margin-bottom:3px">'
           + '<div style="width:20px;height:20px;border-radius:50%;background:' + bg + ';color:' + fg + ';display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;flex-shrink:0">' + firstName[0] + '</div>'
           + '<span style="color:var(--text)">' + firstName + '</span>'
           + '<span style="color:var(--text2)"> · ' + DAYS_PL[en.day] + '</span>'
-          + orderTag
-          + '</div>';
+          + orderTag + '</div>';
       }).join('');
       return '<div style="background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.25);border-radius:10px;padding:10px 12px">'
         + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">'
-        + '<span style="font-weight:700;color:var(--text);font-size:0.83rem">\u{1F4CD} ' + g.city + '</span>'
+        + '<span style="font-weight:700;color:var(--text);font-size:0.83rem">📍 ' + g.city + '</span>'
         + '<span style="font-size:0.68rem;background:rgba(251,191,36,.15);color:#fbbf24;border-radius:4px;padding:2px 7px;white-space:nowrap">−' + saving + ' wyjazd' + (saving > 1 ? 'y' : '') + '</span>'
         + '</div>'
-        + '<div style="color:var(--text2);font-size:0.75rem;margin-bottom:8px">'
-        + g.entries.length + ' wyjazdy w ' + days.length + ' różnych dniach — można połączyć'
-        + '</div>'
-        + '<div style="display:flex;flex-direction:column">' + mechRows + '</div>'
-        + '</div>';
+        + '<div style="color:var(--text2);font-size:0.75rem;margin-bottom:8px">' + g.entries.length + ' wyjazdy w ' + days.length + ' różnych dniach — można połączyć</div>'
+        + '<div style="display:flex;flex-direction:column">' + mechRows + '</div></div>';
     }).join('');
   }
 
-  // Trip list
   const tripEntries = entries.filter(e=>e.type==='wyjazd' && e.city && (e.week===undefined || e.week===weekOffset)).sort((a,b)=>a.day-b.day);
   document.getElementById('tripList').innerHTML = tripEntries.length===0
     ? `<div style="color:var(--text2)">Brak zaplanowanych wyjazdów</div>`
@@ -1459,25 +1972,36 @@ function render() {
 
 // ── MODAL ─────────────────────────────────────────────────────────────────────
 
+const TYPES = [
+  {key:'wyjazd', label:'🚗 Wyjazd', icon:'🚗'},
+  {key:'praca',  label:'🔧 Praca w warsztacie', icon:'🔧'},
+  {key:'urlop',  label:'🌴 Urlop', icon:'🌴'},
+  {key:'choroba',label:'🤒 Choroba', icon:'🤒'},
+];
+
+const DAYS_PL = ['Pon','Wt','Śr','Czw','Pt','Sob','Nd'];
+const DAYS_FULL = ['Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota','Niedziela'];
+
+let weekOffset = 0;
+let editingEntry = null;
 let selectedType = 'wyjazd';
 let selectedPriority = 'normal';
+
+function e() { return Math.random().toString(36).slice(2); }
 
 function renderPriorityPicker() {
   const pp = document.getElementById('priorityPicker');
   if (!pp) return;
   const defs = [
-    {k:'low',    e:'🟢', l:'Niski'},
-    {k:'normal', e:'🔵', l:'Normalny'},
-    {k:'high',   e:'🟡', l:'Wysoki'},
-    {k:'urgent', e:'🔴', l:'Pilny'}
+    {k:'low',e:'🟢',l:'Niski'},{k:'normal',e:'🔵',l:'Normalny'},
+    {k:'high',e:'🟡',l:'Wysoki'},{k:'urgent',e:'🔴',l:'Pilny'}
   ];
   pp.innerHTML = defs.map(d =>
-    '<button type="button" class="priority-btn' + (selectedPriority===d.k?' active':'') + '" data-p="' + d.k + '" title="' + d.l + '" onclick="selectedPriority=\'' + d.k + '\';renderPriorityPicker()">' + d.e + '</button>'
+    `<button type="button" class="priority-btn ${selectedPriority===d.k?'active':''}" data-p="${d.k}" title="${d.l}" onclick="selectedPriority='${d.k}';renderPriorityPicker()">${d.e}</button>`
   ).join('');
 }
 
 function openModal(mechId=null, day=null, entryId=null) {
-  // Block new entries on holidays (allow editing existing)
   if (!entryId && day !== null) {
     const dates = getWeekDates(weekOffset);
     const cellDate = dates[day];
@@ -1489,19 +2013,16 @@ function openModal(mechId=null, day=null, entryId=null) {
   editingEntry = entryId ? entries.find(e=>e.id===entryId) : null;
   selectedType = editingEntry?.type || 'wyjazd';
 
-  // Mechanic select
   const fMech = document.getElementById('fMech');
   fMech.innerHTML = mechanics.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
   if (editingEntry) fMech.value = editingEntry.mechId;
   else if (mechId) fMech.value = mechId;
 
-  // Day select
   const fDay = document.getElementById('fDay');
   fDay.innerHTML = DAYS_FULL.map((d,i)=>`<option value="${i}">${d}</option>`).join('');
   if (editingEntry) fDay.value = editingEntry.day;
   else if (day!==null) fDay.value = day;
 
-  // Type picker
   renderTypePicker();
 
   document.getElementById('fNote').value  = editingEntry?.note  || '';
@@ -1510,7 +2031,6 @@ function openModal(mechId=null, day=null, entryId=null) {
   renderPriorityPicker();
   document.getElementById('modalTitle').textContent = editingEntry ? 'Edytuj wpis' : 'Nowy wpis';
 
-  // City autocomplete init
   if (editingEntry && editingEntry.city) {
     setCitySelection(editingEntry.city, editingEntry.cityMeta || '', editingEntry.cityLat || '', editingEntry.cityLon || '');
   } else {
@@ -1562,7 +2082,6 @@ async function checkConflictWarn() {
   warn.style.borderColor = 'var(--accent2)';
   warn.style.color = '#93c5fd';
 
-  // Use coords from selection if available
   const selLat = document.getElementById('fCityLat').value;
   const selLon = document.getElementById('fCityLon').value;
   let gCity = null;
@@ -1621,28 +2140,39 @@ function saveEntry() {
   const cityLon= document.getElementById('fCityLon').value;
   const cityMeta = document.getElementById('citySelectedLabel')?.textContent || '';
   const note   = document.getElementById('fNote').value.trim();
-  const order    = document.getElementById('fOrder').value.trim();
+  const order  = document.getElementById('fOrder').value.trim();
   const priority = selectedPriority || 'normal';
 
-  // Pre-populate geo cache from selection
   if (city && cityLat && cityLon) {
     geoCache[city.toLowerCase().trim()] = {lat: parseFloat(cityLat), lon: parseFloat(cityLon)};
   }
 
+  const m = mechanics.find(x => x.id === mechId);
+
   if (editingEntry) {
-    editingEntry.mechId  = mechId;
-    editingEntry.day     = day;
-    editingEntry.type    = selectedType;
-    editingEntry.city    = city;
-    editingEntry.cityMeta= cityMeta;
-    editingEntry.cityLat = cityLat;
-    editingEntry.cityLon = cityLon;
-    editingEntry.note    = note;
+    const oldSnap = {...editingEntry};
+    editingEntry.mechId   = mechId;
+    editingEntry.day      = day;
+    editingEntry.type     = selectedType;
+    editingEntry.city     = city;
+    editingEntry.cityMeta = cityMeta;
+    editingEntry.cityLat  = cityLat;
+    editingEntry.cityLon  = cityLon;
+    editingEntry.note     = note;
     editingEntry.order    = order;
     editingEntry.priority = priority;
     if (editingEntry.week === undefined) editingEntry.week = weekOffset;
+    logHistory('edit', {
+      mechName: m?.name || '?',
+      mechId, day, type: selectedType, city, order, note, priority
+    });
   } else {
-    entries.push({id:e(), mechId, day, type:selectedType, city, cityMeta, cityLat, cityLon, note, order, priority, week:weekOffset});
+    const newId = e();
+    entries.push({id:newId, mechId, day, type:selectedType, city, cityMeta, cityLat, cityLon, note, order, priority, week:weekOffset});
+    logHistory('add', {
+      mechName: m?.name || '?',
+      mechId, day, type: selectedType, city, order, note, priority
+    });
   }
   closeModal();
   render();
@@ -1651,6 +2181,15 @@ function saveEntry() {
 
 function deleteEntry(id, ev) {
   ev.stopPropagation();
+  const en = entries.find(x => x.id === id);
+  if (en) {
+    const m = mechanics.find(x => x.id === en.mechId);
+    logHistory('delete', {
+      mechName: m?.name || '?',
+      mechId: en.mechId, day: en.day, type: en.type,
+      city: en.city, order: en.order, note: en.note
+    });
+  }
   entries = entries.filter(en=>en.id!==id);
   render();
   updateGeoConflicts();
@@ -1675,7 +2214,8 @@ function saveMech() {
   const spec = document.getElementById('mSpec').value.trim() || 'Mechanik';
   const ids = mechanics.map(m=>m.id);
   const newId = ids.length ? Math.max(...ids)+1 : 1;
-  mechanics.push({id:newId, name, spec});
+  mechanics.push({id:newId, name, spec, phone:'', email:'', note:'', vacations:[]});
+  logHistory('mech_add', {mechName: name, spec});
   closeMechModal();
   render();
 }
@@ -1693,14 +2233,14 @@ document.getElementById('modalSave').onclick = saveEntry;
 document.getElementById('mechModalCancel').onclick = closeMechModal;
 document.getElementById('mechModalSave').onclick = saveMech;
 
-document.getElementById('modalOverlay').onclick = e => { if(e.target===document.getElementById('modalOverlay')) closeModal(); };
-document.getElementById('mechModalOverlay').onclick = e => { if(e.target===document.getElementById('mechModalOverlay')) closeMechModal(); };
-document.getElementById('editMechModal').onclick = e => { if(e.target===document.getElementById('editMechModal')) closeEditMechModal(); };
+document.getElementById('modalOverlay').onclick = ev => { if(ev.target===document.getElementById('modalOverlay')) closeModal(); };
+document.getElementById('mechModalOverlay').onclick = ev => { if(ev.target===document.getElementById('mechModalOverlay')) closeMechModal(); };
+document.getElementById('editMechModal').onclick = ev => { if(ev.target===document.getElementById('editMechModal')) closeEditMechModal(); };
 
-document.addEventListener('keydown', e => {
-  if (e.key==='Escape') { closeModal(); closeMechModal(); }
-  if (e.key==='Enter' && document.getElementById('modalOverlay').classList.contains('open')) saveEntry();
-  if (e.key==='Enter' && document.getElementById('mechModalOverlay').classList.contains('open')) saveMech();
+document.addEventListener('keydown', ev => {
+  if (ev.key==='Escape') { closeModal(); closeMechModal(); closeEditMechModal(); }
+  if (ev.key==='Enter' && document.getElementById('modalOverlay').classList.contains('open')) saveEntry();
+  if (ev.key==='Enter' && document.getElementById('mechModalOverlay').classList.contains('open')) saveMech();
 });
 
 // ── CITY AUTOCOMPLETE ────────────────────────────────────────────────────────
@@ -1722,26 +2262,26 @@ function setupCityAutocomplete() {
     citySearchTimer = setTimeout(() => searchCities(q), 400);
   });
 
-  input.addEventListener('keydown', (e) => {
+  input.addEventListener('keydown', (ev) => {
     const items = box.querySelectorAll('.city-suggestion-item');
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
+    if (ev.key === 'ArrowDown') {
+      ev.preventDefault();
       cityFocusedIdx = Math.min(cityFocusedIdx + 1, items.length - 1);
       updateFocus(items);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
+    } else if (ev.key === 'ArrowUp') {
+      ev.preventDefault();
       cityFocusedIdx = Math.max(cityFocusedIdx - 1, 0);
       updateFocus(items);
-    } else if (e.key === 'Enter' && cityFocusedIdx >= 0) {
-      e.preventDefault();
+    } else if (ev.key === 'Enter' && cityFocusedIdx >= 0) {
+      ev.preventDefault();
       items[cityFocusedIdx]?.click();
-    } else if (e.key === 'Escape') {
+    } else if (ev.key === 'Escape') {
       hideSuggestions();
     }
   });
 
-  document.addEventListener('click', (e) => {
-    if (!document.getElementById('cityPickerWrap')?.contains(e.target)) hideSuggestions();
+  document.addEventListener('click', (ev) => {
+    if (!document.getElementById('cityPickerWrap')?.contains(ev.target)) hideSuggestions();
   });
 }
 
@@ -1772,22 +2312,17 @@ async function searchCities(q) {
       const addr = item.address || {};
       const name = addr.city || addr.town || addr.village || addr.hamlet || item.name || item.display_name.split(',')[0];
       const gmina = addr.municipality || addr.county || '';
-      const powiat = addr.county || '';
       const woj = addr.state || '';
       const type = item.type;
       const typeLabel = {city:'miasto',town:'miasto',village:'wieś',hamlet:'przysiółek',suburb:'dzielnica'}[type] || type;
-
       let meta = [];
       if (gmina && gmina !== name) meta.push('gm. ' + gmina);
-      if (powiat && powiat !== gmina) meta.push('pow. ' + powiat.replace(' County',''));
       if (woj) meta.push(woj);
-
       return `<div class="city-suggestion-item" data-idx="${idx}" onclick="selectCity(${idx})">
         <div class="sug-name">${name}<span class="sug-type">${typeLabel}</span></div>
         <div class="sug-meta">${meta.join(' · ')}</div>
       </div>`;
     }).join('');
-
     box.style.display = 'block';
   } catch(err) {
     spinner.style.display = 'none';
@@ -1806,11 +2341,7 @@ function selectCity(idx) {
   let meta = [];
   if (gmina && gmina !== name) meta.push('gm. ' + gmina);
   if (woj) meta.push(woj);
-  const metaStr = meta.join(' · ');
-  const lat = item.lat;
-  const lon = item.lon;
-
-  setCitySelection(name, metaStr, lat, lon);
+  setCitySelection(name, meta.join(' · '), item.lat, item.lon);
   hideSuggestions();
   checkConflictWarn();
 }
@@ -1822,7 +2353,6 @@ function setCitySelection(name, meta, lat, lon) {
   document.getElementById('fCitySearch').value = name;
   document.getElementById('fCitySearch').style.display = 'none';
   document.getElementById('citySearchSpinner').style.display = 'none';
-
   const sel = document.getElementById('citySelected');
   document.getElementById('citySelectedLabel').textContent = name + (meta ? ' · ' + meta : '');
   sel.style.display = 'flex';
@@ -1851,26 +2381,31 @@ let currentPage = 'schedule';
 
 function switchPage(page) {
   currentPage = page;
-  document.getElementById('page-schedule').style.display = page === 'schedule' ? '' : 'none';
-  document.getElementById('page-mechanics').style.display = page === 'mechanics' ? '' : 'none';
+  ['schedule','month','mechanics','history'].forEach(p => {
+    const el = document.getElementById('page-' + p);
+    if (el) el.style.display = p === page ? '' : 'none';
+  });
   document.getElementById('scheduleActions').style.display = page === 'schedule' ? '' : 'none';
   document.getElementById('mechActions').style.display = page === 'mechanics' ? '' : 'none';
+  document.getElementById('monthActions').style.display = page === 'month' ? '' : 'none';
+  document.getElementById('historyActions').style.display = page === 'history' ? '' : 'none';
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.page === page));
-  // week-nav only on schedule
-  document.querySelector('.week-nav').style.display = page === 'schedule' ? '' : 'none';
+  document.getElementById('weekNavBar').style.display = page === 'schedule' ? '' : 'none';
+
   if (page === 'mechanics') renderMechCards();
-  if (page === 'schedule') syncNoTripsToEntries();
+  if (page === 'schedule') { syncNoTripsToEntries(); render(); }
+  if (page === 'month') { renderMonth(); }
+  if (page === 'history') renderHistory();
 }
 
 // ── MECHANICS MANAGEMENT ──────────────────────────────────────────────────────
 
-// Extend mechanics with extra fields if not present
 function ensureMechFields() {
   mechanics.forEach(m => {
     if (!m.phone)    m.phone = '';
     if (!m.email)    m.email = '';
     if (!m.note)     m.note = '';
-    if (!m.vacations) m.vacations = []; // [{from:'2025-06-01', to:'2025-06-14', label:'Urlop letni'}]
+    if (!m.vacations) m.vacations = [];
   });
 }
 
@@ -1913,7 +2448,7 @@ function fmtDateStr(str) {
   return `${d}.${m}.${y}`;
 }
 
-// ── DRAG & DROP reorder ───────────────────────────────────────────────────────
+// ── DRAG & DROP ────────────────────────────────────────────────────────────────
 
 let dragSrcIdx = null;
 
@@ -1940,10 +2475,10 @@ function dragDrop(ev, toIdx) {
   mechanics.splice(toIdx, 0, moved);
   dragSrcIdx = null;
   renderMechCards();
-  render(); // refresh sidebar order
+  render();
 }
 
-// ── EDIT MECH MODAL ───────────────────────────────────────────────────────────
+// ── EDIT MECH MODAL ────────────────────────────────────────────────────────────
 
 let editMechId = null;
 let vacationRows = [];
@@ -1960,11 +2495,10 @@ function openEditMechModal(id) {
   document.getElementById('emPhone').value   = m.phone || '';
   document.getElementById('emEmail').value   = m.email || '';
   document.getElementById('emNote').value    = m.note  || '';
-
   vacationRows = (m.vacations || []).map(v => ({...v}));
   renderVacationRows();
-
   document.getElementById('emDeleteBtn').onclick = () => deleteMech(id);
+  document.getElementById('emDeleteBtn').style.display = '';
   document.getElementById('editMechModal').classList.add('open');
 }
 
@@ -2026,34 +2560,34 @@ function saveEditMech() {
 
   if (editMechId) {
     const m = mechanics.find(x => x.id === editMechId);
-    if (m) { m.name = name; m.spec = spec; m.noTrips = noTrips; m.phone = phone; m.email = email; m.note = note; m.vacations = vacations; }
+    if (m) {
+      const wasName = m.name;
+      m.name = name; m.spec = spec; m.noTrips = noTrips;
+      m.phone = phone; m.email = email; m.note = note; m.vacations = vacations;
+      logHistory('mech_edit', {mechName: name, spec, prev: wasName});
+    }
   } else {
     const ids = mechanics.map(m => m.id);
     const newId = ids.length ? Math.max(...ids) + 1 : 1;
     mechanics.push({id: newId, name, spec, noTrips, phone, email, note, vacations});
+    logHistory('mech_add', {mechName: name, spec});
   }
 
-  // Auto-add vacation entries to schedule
   syncVacationsToEntries();
-  // Auto-fill workshop days for noTrips mechanics (current week only)
   syncNoTripsToEntries();
-
   closeEditMechModal();
   renderMechCards();
   render();
 }
 
 function syncVacationsToEntries() {
-  // Remove old auto-vacation entries for current week only
   entries = entries.filter(en => !(en.autoVacation && (en.week === undefined || en.week === weekOffset)));
-  // Get actual dates of current week
   const weekDates = getWeekDates(weekOffset);
   mechanics.forEach(m => {
     (m.vacations || []).forEach(v => {
       if (!v.from || !v.to) return;
       const from = new Date(v.from + 'T00:00:00');
       const to   = new Date(v.to   + 'T00:00:00');
-      // Only add entries for days in current week that fall within vacation range
       weekDates.forEach((wd, dayIdx) => {
         const wdMidnight = new Date(wd.getFullYear(), wd.getMonth(), wd.getDate());
         if (wdMidnight >= from && wdMidnight <= to) {
@@ -2070,16 +2604,13 @@ function syncVacationsToEntries() {
 }
 
 function syncNoTripsToEntries() {
-  // Remove old auto-workshop entries
   entries = entries.filter(en => !(en.autoWorkshop && (en.week===undefined || en.week===weekOffset)));
   const dates = getWeekDates(weekOffset);
   mechanics.filter(m => m.noTrips).forEach(m => {
-    // Only fill Mon–Fri (days 0–4), skip holidays
     for (let dayIdx = 0; dayIdx <= 4; dayIdx++) {
       const cellDate = dates[dayIdx];
       const isHoliday = cellDate && !!getHolidays(cellDate.getFullYear())[dateKey(cellDate)];
       if (isHoliday) continue;
-      // Don't add if there's already any manual entry for that day
       const hasEntry = entries.some(en => en.mechId === m.id && en.day === dayIdx && !en.autoWorkshop && (en.week===undefined || en.week===weekOffset));
       if (!hasEntry) {
         entries.push({
@@ -2094,6 +2625,8 @@ function syncNoTripsToEntries() {
 
 function deleteMech(id) {
   if (!confirm('Na pewno usunąć tego mechanika? Wszystkie jego wpisy zostaną usunięte.')) return;
+  const m = mechanics.find(x => x.id === id);
+  if (m) logHistory('mech_delete', {mechName: m.name, spec: m.spec});
   mechanics = mechanics.filter(m => m.id !== id);
   entries = entries.filter(en => en.mechId !== id);
   closeEditMechModal();
@@ -2102,7 +2635,7 @@ function deleteMech(id) {
   updateGeoConflicts();
 }
 
-// ── THEME ─────────────────────────────────────────────────────────────────────────────
+// ── THEME ─────────────────────────────────────────────────────────────────────
 
 function toggleTheme() {
   const isLight = document.body.classList.toggle('light-mode');
@@ -2110,27 +2643,19 @@ function toggleTheme() {
   if (btn) btn.textContent = isLight ? '☀️' : '🌙';
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// KONFIGURACJA — uzupełnij po rejestracji aplikacji w Azure AD
-// ══════════════════════════════════════════════════════════════════════════════
-const SP_SITE_URL   = 'https://wanickicloud.sharepoint.com/sites/Dzialserwisu';            // np. 'https://wanicki.sharepoint.com/sites/serwis'
-const SP_LIST_NAME = 'GrafikSerwis'; // nazwa listy SharePoint
-const AAD_CLIENT_ID = 'ef03ecb9-e698-45c9-b7d3-c0566daa92cf';           // Application (client) ID z Azure AD
-const AAD_TENANT_ID = '20b95619-a806-4ba2-b870-465f933fa63c';           // Directory (tenant) ID z Azure AD
-// ══════════════════════════════════════════════════════════════════════════════
+// ── SHAREPOINT / SYNC ─────────────────────────────────────────────────────────
 
+const SP_SITE_URL   = 'https://wanickicloud.sharepoint.com/sites/Dzialserwisu';
+const SP_LIST_NAME  = 'GrafikSerwis';
+const AAD_CLIENT_ID = 'ef03ecb9-e698-45c9-b7d3-c0566daa92cf';
+const AAD_TENANT_ID = '20b95619-a806-4ba2-b870-465f933fa63c';
 const SP_ITEM_TITLE = 'grafik_v1';
 let spLastSaved = null;
 let spSaveTimer = null;
 let spConfigured = SP_SITE_URL !== '' && AAD_CLIENT_ID !== '';
 
-// ── MSAL konfiguracja ─────────────────────────────────────────────────────────
-
-
-
 function initMsal() {
   if (!spConfigured) return;
-  // Sprawdz czy wracamy po logowaniu (token w URL hash)
   const hash = window.location.hash;
   if (hash && hash.includes('access_token')) {
     try {
@@ -2139,50 +2664,41 @@ function initMsal() {
       const exp = parseInt(params.get('expires_in') || '28800');
       if (tok) {
         sessionStorage.setItem('sp_token', tok);
-        sessionStorage.setItem('sp_token_exp', String(Date.now() + exp * 1000 - 300000)); // odnow 5min przed wygasnieciem
+        sessionStorage.setItem('sp_token_exp', String(Date.now() + exp * 1000 - 300000));
         history.replaceState(null, '', window.location.pathname);
-        console.log('[SP] Token otrzymany z logowania');
         scheduleTokenRefresh();
       }
-    } catch(e) { console.error('[SP] Hash parse error:', e); }
+    } catch(err) { console.error('[SP] Hash parse error:', err); }
   }
 }
 
 function scheduleTokenRefresh() {
   const exp = parseInt(sessionStorage.getItem('sp_token_exp') || '0');
   if (!exp) return;
-  const msUntilRefresh = exp - Date.now(); // refresh when 5min left (already baked in)
+  const msUntilRefresh = exp - Date.now();
   if (msUntilRefresh <= 0) return;
-  console.log('[SP] Token refresh za:', Math.round(msUntilRefresh/60000), 'minut');
   setTimeout(() => {
-    console.log('[SP] Cichy refresh tokenu...');
-    // silent refresh przez ukryty iframe
     const redirectUri = encodeURIComponent(window.location.href.split('#')[0]);
     const scope = encodeURIComponent('https://graph.microsoft.com/Sites.ReadWrite.All openid profile');
     const silentUrl = 'https://login.microsoftonline.com/' + AAD_TENANT_ID +
-      '/oauth2/v2.0/authorize' +
-      '?client_id=' + AAD_CLIENT_ID +
-      '&response_type=token' +
-      '&redirect_uri=' + redirectUri +
-      '&scope=' + scope +
-      '&response_mode=fragment' +
-      '&prompt=none';  // none = cichy, nie pokazuj UI
+      '/oauth2/v2.0/authorize?client_id=' + AAD_CLIENT_ID +
+      '&response_type=token&redirect_uri=' + redirectUri +
+      '&scope=' + scope + '&response_mode=fragment&prompt=none';
     const iframe = document.createElement('iframe');
     iframe.style.display = 'none';
     iframe.src = silentUrl;
     iframe.onload = () => {
       try {
-        const hash = iframe.contentWindow.location.hash;
-        if (hash && hash.includes('access_token')) {
-          const params = new URLSearchParams(hash.substring(1));
-          const tok = params.get('access_token');
-          const exp2 = parseInt(params.get('expires_in') || '28800');
-          sessionStorage.setItem('sp_token', tok);
-          sessionStorage.setItem('sp_token_exp', String(Date.now() + exp2 * 1000 - 300000));
-          console.log('[SP] Token odswiezony cicho');
+        const h = iframe.contentWindow.location.hash;
+        if (h && h.includes('access_token')) {
+          const p = new URLSearchParams(h.substring(1));
+          const t = p.get('access_token');
+          const e2 = parseInt(p.get('expires_in') || '28800');
+          sessionStorage.setItem('sp_token', t);
+          sessionStorage.setItem('sp_token_exp', String(Date.now() + e2 * 1000 - 300000));
           scheduleTokenRefresh();
         }
-      } catch(e) { /* cross-origin - normal if needs re-login */ }
+      } catch(err) {}
       document.body.removeChild(iframe);
     };
     document.body.appendChild(iframe);
@@ -2193,7 +2709,6 @@ async function getToken() {
   const tok = sessionStorage.getItem('sp_token');
   const exp = parseInt(sessionStorage.getItem('sp_token_exp') || '0');
   if (tok && exp > Date.now()) return tok;
-  // Token wygasl - pokaz strone logowania
   showLoginPage();
   return null;
 }
@@ -2210,9 +2725,8 @@ function syncStatusSet(state, text) {
   });
 }
 
-// ── Serializacja stanu ────────────────────────────────────────────────────────
 function appStateToJSON() {
-  return JSON.stringify({ mechanics, entries });
+  return JSON.stringify({ mechanics, entries, changeHistory });
 }
 
 function appStateFromJSON(json) {
@@ -2220,54 +2734,44 @@ function appStateFromJSON(json) {
     const d = JSON.parse(json);
     if (d.mechanics) mechanics = d.mechanics;
     if (d.entries)   entries   = d.entries;
+    if (d.changeHistory) changeHistory = d.changeHistory;
     return true;
-  } catch(e) { return false; }
+  } catch(err) { return false; }
 }
 
-// ── SharePoint REST helpers ───────────────────────────────────────────────────
 async function spRequest(method, url, body) {
   const headers = { 'Accept': 'application/json;odata=nometadata', 'Content-Type': 'application/json;odata=nometadata' };
   if (method !== 'GET') {
-    // get request digest (form digest) for write operations
     try {
       const dr = await fetch(SP_SITE_URL + '/_api/contextinfo', { method:'POST', headers:{'Accept':'application/json;odata=nometadata'} });
       const dd = await dr.json();
       headers['X-RequestDigest'] = dd.FormDigestValue;
-    } catch(e) { /* continue without digest — will fail for writes but let error propagate */ }
+    } catch(err) {}
     if (method === 'PATCH') headers['IF-MATCH'] = '*';
-    if (method === 'PATCH' || method === 'POST') headers['X-HTTP-Method'] = method === 'PATCH' ? 'MERGE' : undefined;
-    if (headers['X-HTTP-Method'] === undefined) delete headers['X-HTTP-Method'];
+    if (method === 'PATCH') headers['X-HTTP-Method'] = 'MERGE';
   }
   const resp = await fetch(url, { method: method === 'PATCH' ? 'POST' : method, headers, body: body ? JSON.stringify(body) : undefined });
-  if (!resp.ok) throw new Error('HTTP ' + resp.status + ' ' + resp.statusText);
+  if (!resp.ok) throw new Error('HTTP ' + resp.status);
   if (resp.status === 204) return null;
   return resp.json();
 }
 
 async function spGetItem(token) {
   const url = SP_SITE_URL + "/_api/web/lists/getbytitle('" + SP_LIST_NAME + "')/items?$filter=Title eq '" + SP_ITEM_TITLE + "'&$top=1&$select=Id,GrafikData";
-  const data = await spRequest('GET', url, null, token);
+  const data = await spRequest('GET', url, null);
   return data && data.value && data.value.length > 0 ? data.value[0] : null;
 }
 
-// ── Wczytanie ze SharePoint ───────────────────────────────────────────────────
 async function spLoad() {
   if (!spConfigured) {
-    // Brak konfiguracji SP — tryb lokalny (localStorage)
     const local = localStorage.getItem('grafik_serwis_backup');
-    if (local) {
-      appStateFromJSON(local);
-      syncStatusSet('ok', 'Dane lokalne');
-    } else {
-      syncStatusSet('ok', 'Tryb lokalny');
-    }
+    if (local) { appStateFromJSON(local); syncStatusSet('ok', 'Dane lokalne'); }
+    else syncStatusSet('ok', 'Tryb lokalny');
     syncNoTripsToEntries(); syncVacationsToEntries(); render(); updateGeoConflicts();
-    spReady = true;
-    return;
+    spReady = true; return;
   }
-  // Sprawdź token — jeśli brak, przekieruj do logowania natychmiast
   const token = await getToken();
-  if (!token) return; // getToken sam przekierowuje
+  if (!token) return;
   syncStatusSet('saving', 'Wczytywanie...');
   try {
     const item = await spGetItem(token);
@@ -2278,9 +2782,8 @@ async function spLoad() {
     } else {
       syncStatusSet('ok', 'Nowy grafik — brak danych');
     }
-  } catch(e) {
+  } catch(err) {
     syncStatusSet('error', 'Błąd wczytania');
-    console.error('SP load error:', e);
     const local = localStorage.getItem('grafik_serwis_backup');
     if (local) { appStateFromJSON(local); syncStatusSet('error', 'Offline — dane lokalne'); }
   }
@@ -2288,42 +2791,32 @@ async function spLoad() {
   spReady = true;
 }
 
-// ── Zapis do SharePoint ───────────────────────────────────────────────────────
 async function spSave(manual) {
   const json = appStateToJSON();
-  if (!manual && json === spLastSaved) return; // bez zmian
-  // always backup locally
+  if (!manual && json === spLastSaved) return;
   localStorage.setItem('grafik_serwis_backup', json);
   if (!spConfigured) return;
   syncStatusSet('saving', 'Zapisywanie...');
   try {
     const token = await getToken();
     if (!token) return;
-    const siteId = await getSiteId(token);
     const item = await spGetItem(token);
-    const fields = { Title: SP_ITEM_TITLE, GrafikData: json };
     if (item && item.Id) {
-      // Update existing item
-      const patchUrl = 'https://graph.microsoft.com/v1.0/sites/' + siteId +
-        '/lists/' + SP_LIST_NAME + '/items/' + item.Id + '/fields';
-      await graphRequest('PATCH', patchUrl, fields, token);
+      const patchUrl = SP_SITE_URL + "/_api/web/lists/getbytitle('" + SP_LIST_NAME + "')/items(" + item.Id + ")";
+      await spRequest('PATCH', patchUrl, { Title: SP_ITEM_TITLE, GrafikData: json });
     } else {
-      // Create new item
-      const postUrl = 'https://graph.microsoft.com/v1.0/sites/' + siteId +
-        '/lists/' + SP_LIST_NAME + '/items';
-      await graphRequest('POST', postUrl, { fields }, token);
+      const postUrl = SP_SITE_URL + "/_api/web/lists/getbytitle('" + SP_LIST_NAME + "')/items";
+      await spRequest('POST', postUrl, { Title: SP_ITEM_TITLE, GrafikData: json });
     }
     spLastSaved = json;
     const now = new Date();
     syncStatusSet('ok', 'Zapisano ' + now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0'));
-  } catch(e) {
+  } catch(err) {
     syncStatusSet('error', 'Błąd zapisu — dane lokalne OK');
-    console.error('SP save error:', e);
   }
 }
 
-// ── Autozapis po zmianie (debounce 3s) ───────────────────────────────────────
-let spReady = false; // don't autosave until initial load is complete
+let spReady = false;
 
 function scheduleSave() {
   if (!spReady) return;
@@ -2331,49 +2824,48 @@ function scheduleSave() {
   spSaveTimer = setTimeout(() => spSave(false), 3000);
 }
 
-// ── LOGIN PAGE ─────────────────────────────────────────────────────────────────────────────
+// ── LOGIN PAGE ─────────────────────────────────────────────────────────────────
 
 function showLoginPage() {
   document.getElementById('page-login').style.display = 'flex';
   document.querySelector('header').style.display = 'none';
-  document.getElementById('spConfigBanner').style.display = 'none';
   document.getElementById('page-schedule').style.display = 'none';
   document.getElementById('page-mechanics').style.display = 'none';
+  document.getElementById('page-month').style.display = 'none';
+  document.getElementById('page-history').style.display = 'none';
 }
 
 function hideLoginPage() {
   document.getElementById('page-login').style.display = 'none';
   document.querySelector('header').style.display = '';
-  scheduleTokenRefresh(); // zaplanuj odswiezenie tokenu
+  scheduleTokenRefresh();
 }
 
 function loginWithMicrosoft() {
   const redirectUri = encodeURIComponent(window.location.href.split('#')[0]);
   const scope = encodeURIComponent('https://graph.microsoft.com/Sites.ReadWrite.All openid profile');
   const loginUrl = 'https://login.microsoftonline.com/' + AAD_TENANT_ID +
-    '/oauth2/v2.0/authorize' +
-    '?client_id=' + AAD_CLIENT_ID +
-    '&response_type=token' +
-    '&redirect_uri=' + redirectUri +
-    '&scope=' + scope +
-    '&response_mode=fragment' +
-    '&prompt=select_account';
+    '/oauth2/v2.0/authorize?client_id=' + AAD_CLIENT_ID +
+    '&response_type=token&redirect_uri=' + redirectUri +
+    '&scope=' + scope + '&response_mode=fragment&prompt=select_account';
   window.location.href = loginUrl;
 }
 
 function loginLocal() {
+  const nameInput = prompt('Twoje imię (do historii zmian):', 'Lokalny');
+  currentUser = nameInput || 'Lokalny';
   hideLoginPage();
   const local = localStorage.getItem('grafik_serwis_backup');
   if (local) appStateFromJSON(local);
-  syncStatusSet('', 'Tryb lokalny');
+  syncStatusSet('', 'Tryb lokalny — ' + currentUser);
   syncNoTripsToEntries(); syncVacationsToEntries(); render(); updateGeoConflicts();
   spReady = true;
 }
 
-// ── INIT ───────────────────────────────────────────────────────────────────────────────
+// ── INIT ───────────────────────────────────────────────────────────────────────
+
 ensureMechFields();
 setupCityAutocomplete();
-document.getElementById('spConfigBanner').style.display = 'none';
 initMsal();
 
 if (spConfigured) {
