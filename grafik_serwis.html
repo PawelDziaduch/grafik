@@ -1541,7 +1541,7 @@ function renderMonthGrid() {
     cur.setDate(cur.getDate() + 1);
   }
 
-  // Compute week offset for each date
+  // Compute week offset for each date (kept for goToWeekOfDate)
   function getWeekOffsetForDate(d) {
     const mon = getMonday(0);
     const diffMs = d - mon;
@@ -1552,7 +1552,7 @@ function renderMonthGrid() {
   function getDayIdxInWeek(d) {
     let dow = d.getDay();
     if (dow === 0) dow = 7;
-    return dow - 1; // Mon=0..Sun=6
+    return dow - 1;
   }
 
   const filteredMechs = monthFilterMechs.size > 0
@@ -1565,14 +1565,15 @@ function renderMonthGrid() {
     const hKey = dateKey(d);
     const isHoliday = !!holidays[hKey];
     const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-    const wOff = getWeekOffsetForDate(d);
-    const dayIdx = getDayIdxInWeek(d);
 
-    // Get entries for this day
+    // Get entries for this day — match by stored date field
+    const dKey = dateKey(d);
     const dayEntries = entries.filter(en => {
-      const enWeek = en.week === undefined ? 0 : en.week;
-      return enWeek === wOff && en.day === dayIdx &&
-        (monthFilterMechs.size === 0 || monthFilterMechs.has(en.mechId));
+      // Match by date field (new) or fall back to week+day (legacy)
+      if (en.date) return en.date === dKey && (monthFilterMechs.size === 0 || monthFilterMechs.has(en.mechId));
+      // Legacy fallback: compute date from week+day
+      const legacyDate = entryDateKey(en.week || 0, en.day);
+      return legacyDate === dKey && (monthFilterMechs.size === 0 || monthFilterMechs.has(en.mechId));
     });
 
     const MAX_CHIPS = 3;
@@ -1675,6 +1676,21 @@ function getWeekDates(offset=0) {
     const d = new Date(mon);
     d.setDate(d.getDate()+i);
     return d;
+  });
+}
+
+// Returns "YYYY-MM-DD" for a given weekOffset + dayIndex
+function entryDateKey(weekOff, dayIdx) {
+  const dates = getWeekDates(weekOff);
+  return dates[dayIdx] ? dateKey(dates[dayIdx]) : null;
+}
+
+// Ensure all entries have a stable "date" field
+function ensureEntryDates() {
+  entries.forEach(en => {
+    if (!en.date && en.day !== undefined && en.week !== undefined) {
+      en.date = entryDateKey(en.week, en.day);
+    }
   });
 }
 
@@ -2149,10 +2165,14 @@ function saveEntry() {
 
   const m = mechanics.find(x => x.id === mechId);
 
+  const entDate = entryDateKey(weekOffset, day);
+
   if (editingEntry) {
     const oldSnap = {...editingEntry};
     editingEntry.mechId   = mechId;
     editingEntry.day      = day;
+    editingEntry.week     = weekOffset;
+    editingEntry.date     = entDate;
     editingEntry.type     = selectedType;
     editingEntry.city     = city;
     editingEntry.cityMeta = cityMeta;
@@ -2161,14 +2181,13 @@ function saveEntry() {
     editingEntry.note     = note;
     editingEntry.order    = order;
     editingEntry.priority = priority;
-    if (editingEntry.week === undefined) editingEntry.week = weekOffset;
     logHistory('edit', {
       mechName: m?.name || '?',
       mechId, day, type: selectedType, city, order, note, priority
     });
   } else {
     const newId = e();
-    entries.push({id:newId, mechId, day, type:selectedType, city, cityMeta, cityLat, cityLon, note, order, priority, week:weekOffset});
+    entries.push({id:newId, mechId, day, week:weekOffset, date:entDate, type:selectedType, city, cityMeta, cityLat, cityLon, note, order, priority});
     logHistory('add', {
       mechName: m?.name || '?',
       mechId, day, type: selectedType, city, order, note, priority
@@ -2593,8 +2612,9 @@ function syncVacationsToEntries() {
         if (wdMidnight >= from && wdMidnight <= to) {
           entries.push({
             id: e(), mechId: m.id, day: dayIdx,
+            week: weekOffset, date: dateKey(wd),
             type: 'urlop', city: '', note: v.label || 'Urlop',
-            autoVacation: true, week: weekOffset,
+            autoVacation: true,
             vacFrom: v.from, vacTo: v.to
           });
         }
@@ -2615,8 +2635,9 @@ function syncNoTripsToEntries() {
       if (!hasEntry) {
         entries.push({
           id: e(), mechId: m.id, day: dayIdx,
+          week: weekOffset, date: cellDate ? dateKey(cellDate) : null,
           type: 'praca', city: '', note: 'Warsztat',
-          autoWorkshop: true, week: weekOffset
+          autoWorkshop: true
         });
       }
     }
@@ -2767,7 +2788,7 @@ async function spLoad() {
     const local = localStorage.getItem('grafik_serwis_backup');
     if (local) { appStateFromJSON(local); syncStatusSet('ok', 'Dane lokalne'); }
     else syncStatusSet('ok', 'Tryb lokalny');
-    syncNoTripsToEntries(); syncVacationsToEntries(); render(); updateGeoConflicts();
+    syncNoTripsToEntries(); syncVacationsToEntries(); ensureEntryDates(); render(); updateGeoConflicts();
     spReady = true; return;
   }
   const token = await getToken();
@@ -2787,7 +2808,7 @@ async function spLoad() {
     const local = localStorage.getItem('grafik_serwis_backup');
     if (local) { appStateFromJSON(local); syncStatusSet('error', 'Offline — dane lokalne'); }
   }
-  syncNoTripsToEntries(); syncVacationsToEntries(); render(); updateGeoConflicts();
+  syncNoTripsToEntries(); syncVacationsToEntries(); ensureEntryDates(); render(); updateGeoConflicts();
   spReady = true;
 }
 
@@ -2858,7 +2879,7 @@ function loginLocal() {
   const local = localStorage.getItem('grafik_serwis_backup');
   if (local) appStateFromJSON(local);
   syncStatusSet('', 'Tryb lokalny — ' + currentUser);
-  syncNoTripsToEntries(); syncVacationsToEntries(); render(); updateGeoConflicts();
+  syncNoTripsToEntries(); syncVacationsToEntries(); ensureEntryDates(); render(); updateGeoConflicts();
   spReady = true;
 }
 
