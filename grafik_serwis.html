@@ -831,7 +831,38 @@
     margin-left: 5px; vertical-align: middle;
   }
 
-  /* LOGIN PAGE */
+  /* BRANCH SELECTOR */
+  .branch-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 20px;
+    max-height: 280px;
+    overflow-y: auto;
+  }
+  .branch-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all .15s;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text);
+    text-align: left;
+  }
+  .branch-btn:hover { border-color: var(--accent2); background: rgba(74,156,58,.1); }
+  .branch-btn.selected { border-color: var(--jd-yellow); background: rgba(255,222,0,.1); color: var(--jd-yellow); }
+  .branch-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .branch-selector-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.72rem; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase;
+    color: var(--text2); margin-bottom: 10px;
+  }
   #page-login {
     position: fixed; inset: 0; z-index: 9999;
     background: var(--bg);
@@ -958,7 +989,7 @@
     </svg>
     <div style="margin-left:2px">
       <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.25rem;letter-spacing:0.02em;color:#ffffff;line-height:1.1">WANICKI</div>
-      <div style="font-size:0.68rem;color:#7a9a72;letter-spacing:0.08em;text-transform:uppercase;margin-top:2px">Oddział Wola Piasecka</div>
+      <div style="font-size:0.68rem;color:#7a9a72;letter-spacing:0.08em;text-transform:uppercase;margin-top:2px" id="branchSubtitle">Oddział</div>
     </div>
   </div>
   <div class="week-nav" id="weekNavBar">
@@ -994,11 +1025,17 @@
 
 <!-- PAGE: LOGIN -->
 <div id="page-login" style="display:flex">
-  <div class="login-card">
+  <div class="login-card" style="max-width:480px">
     <div class="login-logo">🦌</div>
     <div class="login-title">WANICKI</div>
-    <div class="login-sub">Grafik Działu Serwisu &mdash; Wola Piasecka</div>
-    <button class="login-btn-ms" onclick="loginWithMicrosoft()">
+    <div class="login-sub">Grafik Działu Serwisu</div>
+
+    <div class="branch-selector-title">Wybierz oddział</div>
+    <div class="branch-grid" id="branchGrid"></div>
+
+    <div id="branchSelectedInfo" style="display:none;margin-bottom:16px;background:rgba(255,222,0,.1);border:1px solid rgba(255,222,0,.3);border-radius:8px;padding:10px 14px;font-size:0.85rem;color:var(--jd-yellow);font-weight:600;text-align:center"></div>
+
+    <button class="login-btn-ms" onclick="loginWithMicrosoft()" id="loginMsBtn" disabled style="opacity:.5;cursor:not-allowed">
       <svg width="20" height="20" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
         <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
@@ -1007,11 +1044,11 @@
       </svg>
       Zaloguj przez Microsoft
     </button>
-    <button class="login-btn-local" onclick="loginLocal()">
+    <button class="login-btn-local" onclick="loginLocal()" id="loginLocalBtn" disabled style="opacity:.5;cursor:not-allowed">
       Pracuj lokalnie (bez zapisu do chmury)
     </button>
     <div class="login-info">
-      Dane s&#x105; zapisywane na li&#x15B;cie SharePoint.<br>
+      Dane każdego oddziału są przechowywane osobno na SharePoint.<br>
       Wymagane konto Microsoft 365 firmy Wanicki.
     </div>
   </div>
@@ -1250,22 +1287,7 @@ const COLORS = [
   ['#38bdf8','#08182a'],['#e879f9','#280a28'],['#a3e635','#182008'],
 ];
 
-let mechanics = [
-  {id:1,  name:'Tomasz Sagan',          spec:'Mechanik', phone:'', email:'', note:'', vacations:[]},
-  {id:2,  name:'Michał Jurek',          spec:'Mechanik', phone:'', email:'', note:'', vacations:[]},
-  {id:3,  name:'Paweł Lipiec',          spec:'Mechanik', phone:'', email:'', note:'', vacations:[]},
-  {id:4,  name:'Piotr Gustaw',          spec:'Mechanik', phone:'', email:'', note:'', vacations:[]},
-  {id:5,  name:'Dawid Morokiszka',      spec:'Mechanik', phone:'', email:'', note:'', vacations:[]},
-  {id:6,  name:'Łukasz Buda',           spec:'Mechanik', phone:'', email:'', note:'', vacations:[]},
-  {id:7,  name:'Kamil Tarnas',          spec:'Mechanik', phone:'', email:'', note:'', vacations:[]},
-  {id:8,  name:'Dawid Skorek',          spec:'Mechanik', phone:'', email:'', note:'', vacations:[]},
-  {id:9,  name:'Przemysław Szabała',    spec:'Mechanik', phone:'', email:'', note:'', vacations:[]},
-  {id:10, name:'Kamil Stefaniak',       spec:'Mechanik', phone:'', email:'', note:'', vacations:[]},
-  {id:11, name:'Bartłomiej Jasiński',   spec:'Mechanik', phone:'', email:'', note:'', vacations:[]},
-  {id:12, name:'Przemysław Wójcik',     spec:'Pomocnik',  phone:'', email:'', note:'', vacations:[]},
-  {id:13, name:'Łukasz Olcha',          spec:'Pomocnik',  phone:'', email:'', note:'', vacations:[]},
-  {id:14, name:'Mateusz Cenian',        spec:'Pomocnik',  phone:'', email:'', note:'', vacations:[]},
-];
+let mechanics = [];  // Mechanicy ładowani z SharePoint lub dodawani ręcznie
 
 let entries = [];
 
@@ -2665,17 +2687,78 @@ function toggleTheme() {
 
 // ── SHAREPOINT / SYNC ─────────────────────────────────────────────────────────
 
+// ── KONFIGURACJA ODDZIAŁÓW ────────────────────────────────────────────────────
+
+const BRANCHES = [
+  { id: 'wola',    name: 'Wola Piasecka',  color: '#367C2B', listName: 'GrafikSerwis_WolaPiasecka'  },
+  { id: 'sitaniec',name: 'Sitaniec',        color: '#3b82f6', listName: 'GrafikSerwis_Sitaniec'       },
+  { id: 'jaroslaw',name: 'Jarosław',        color: '#f0a500', listName: 'GrafikSerwis_Jaroslaw'       },
+  { id: 'kajetanow',name:'Kajetanów',       color: '#a78bfa', listName: 'GrafikSerwis_Kajetanow'      },
+  { id: 'kielce',  name: 'Kielce',          color: '#ef4444', listName: 'GrafikSerwis_Kielce'         },
+  { id: 'wolborz', name: 'Wolbórz',         color: '#34d399', listName: 'GrafikSerwis_Wolborz'        },
+  { id: 'bramki',  name: 'Bramki',          color: '#fb923c', listName: 'GrafikSerwis_Bramki'         },
+  { id: 'kutno',   name: 'Kutno',           color: '#60a5fa', listName: 'GrafikSerwis_Kutno'          },
+  { id: 'renska',  name: 'Reńska Wieś',    color: '#c084fc', listName: 'GrafikSerwis_RenskaWies'     },
+  { id: 'miechow', name: 'Miechów',         color: '#f472b6', listName: 'GrafikSerwis_Miechow'        },
+  { id: 'grojec',  name: 'Grójec',          color: '#fbbf24', listName: 'GrafikSerwis_Grojec'         },
+];
+
 const SP_SITE_URL   = 'https://wanickicloud.sharepoint.com/sites/Dzialserwisu';
-const SP_LIST_NAME  = 'GrafikSerwis';
 const AAD_CLIENT_ID = 'ef03ecb9-e698-45c9-b7d3-c0566daa92cf';
 const AAD_TENANT_ID = '20b95619-a806-4ba2-b870-465f933fa63c';
 const SP_ITEM_TITLE = 'grafik_v1';
+
+// Aktywny oddział — ustawiany przy logowaniu
+let currentBranch = null; // { id, name, color, listName }
+
+function initBranchSelector() {
+  const grid = document.getElementById('branchGrid');
+  grid.innerHTML = BRANCHES.map(b => `
+    <button class="branch-btn" data-id="${b.id}" onclick="selectBranch('${b.id}')">
+      <span class="branch-dot" style="background:${b.color}"></span>
+      ${b.name}
+    </button>
+  `).join('');
+}
+
+function selectBranch(id) {
+  currentBranch = BRANCHES.find(b => b.id === id);
+  document.querySelectorAll('.branch-btn').forEach(btn => {
+    btn.classList.toggle('selected', btn.dataset.id === id);
+  });
+  const info = document.getElementById('branchSelectedInfo');
+  info.style.display = 'block';
+  info.textContent = '📍 ' + currentBranch.name;
+  // Unlock login buttons
+  const msBtn = document.getElementById('loginMsBtn');
+  const localBtn = document.getElementById('loginLocalBtn');
+  msBtn.disabled = false; msBtn.style.opacity = '1'; msBtn.style.cursor = 'pointer';
+  localBtn.disabled = false; localBtn.style.opacity = '1'; localBtn.style.cursor = 'pointer';
+}
+
+function applyBranchTheme() {
+  if (!currentBranch) return;
+  document.documentElement.style.setProperty('--jd-green', currentBranch.color);
+  document.documentElement.style.setProperty('--success', currentBranch.color);
+  document.documentElement.style.setProperty('--accent2', currentBranch.color);
+  // Update header subtitle
+  const subEl = document.getElementById('branchSubtitle');
+  if (subEl) subEl.textContent = currentBranch.name;
+}
+
+let SP_LIST_NAME = 'GrafikSerwis'; // overwritten after branch selection
 let spLastSaved = null;
 let spSaveTimer = null;
 let spConfigured = SP_SITE_URL !== '' && AAD_CLIENT_ID !== '';
 
 function initMsal() {
   if (!spConfigured) return;
+  // Restore branch from session (survives redirect)
+  const savedBranchId = sessionStorage.getItem('selected_branch');
+  if (savedBranchId) {
+    currentBranch = BRANCHES.find(b => b.id === savedBranchId) || null;
+    if (currentBranch) SP_LIST_NAME = currentBranch.listName;
+  }
   const hash = window.location.hash;
   if (hash && hash.includes('access_token')) {
     try {
@@ -2783,28 +2866,31 @@ async function spGetItem(token) {
 }
 
 async function spLoad() {
+  const localKey = 'grafik_serwis_backup_' + (currentBranch?.id || 'default');
   if (!spConfigured) {
-    const local = localStorage.getItem('grafik_serwis_backup');
+    const local = localStorage.getItem(localKey);
     if (local) { appStateFromJSON(local); syncStatusSet('ok', 'Dane lokalne'); }
     else syncStatusSet('ok', 'Tryb lokalny');
+    applyBranchTheme();
     syncNoTripsToEntries(); syncVacationsToEntries(); ensureEntryDates(); render(); updateGeoConflicts();
     spReady = true; return;
   }
   const token = await getToken();
   if (!token) return;
+  applyBranchTheme();
   syncStatusSet('saving', 'Wczytywanie...');
   try {
     const item = await spGetItem(token);
     if (item && item.GrafikData) {
       appStateFromJSON(item.GrafikData);
       spLastSaved = item.GrafikData;
-      syncStatusSet('ok', 'Wczytano ✔');
+      syncStatusSet('ok', 'Wczytano ✔ — ' + (currentBranch?.name || ''));
     } else {
-      syncStatusSet('ok', 'Nowy grafik — brak danych');
+      syncStatusSet('ok', 'Nowy grafik — ' + (currentBranch?.name || ''));
     }
   } catch(err) {
     syncStatusSet('error', 'Błąd wczytania');
-    const local = localStorage.getItem('grafik_serwis_backup');
+    const local = localStorage.getItem(localKey);
     if (local) { appStateFromJSON(local); syncStatusSet('error', 'Offline — dane lokalne'); }
   }
   syncNoTripsToEntries(); syncVacationsToEntries(); ensureEntryDates(); render(); updateGeoConflicts();
@@ -2812,9 +2898,10 @@ async function spLoad() {
 }
 
 async function spSave(manual) {
+  const localKey = 'grafik_serwis_backup_' + (currentBranch?.id || 'default');
   const json = appStateToJSON();
   if (!manual && json === spLastSaved) return;
-  localStorage.setItem('grafik_serwis_backup', json);
+  localStorage.setItem(localKey, json);
   if (!spConfigured) return;
   syncStatusSet('saving', 'Zapisywanie...');
   try {
@@ -2862,22 +2949,29 @@ function hideLoginPage() {
 }
 
 function loginWithMicrosoft() {
+  if (!currentBranch) { alert('Wybierz oddział przed zalogowaniem.'); return; }
   const redirectUri = encodeURIComponent(window.location.href.split('#')[0]);
   const scope = encodeURIComponent('https://graph.microsoft.com/Sites.ReadWrite.All openid profile');
   const loginUrl = 'https://login.microsoftonline.com/' + AAD_TENANT_ID +
     '/oauth2/v2.0/authorize?client_id=' + AAD_CLIENT_ID +
     '&response_type=token&redirect_uri=' + redirectUri +
-    '&scope=' + scope + '&response_mode=fragment&prompt=select_account';
+    '&scope=' + scope + '&response_mode=fragment&prompt=select_account' +
+    '&state=' + encodeURIComponent(currentBranch.id);
+  // Save selected branch so we can restore after redirect
+  sessionStorage.setItem('selected_branch', currentBranch.id);
   window.location.href = loginUrl;
 }
 
 function loginLocal() {
+  if (!currentBranch) { alert('Wybierz oddział przed zalogowaniem.'); return; }
   const nameInput = prompt('Twoje imię (do historii zmian):', 'Lokalny');
   currentUser = nameInput || 'Lokalny';
+  SP_LIST_NAME = currentBranch.listName;
+  applyBranchTheme();
   hideLoginPage();
-  const local = localStorage.getItem('grafik_serwis_backup');
+  const local = localStorage.getItem('grafik_serwis_backup_' + currentBranch.id);
   if (local) appStateFromJSON(local);
-  syncStatusSet('', 'Tryb lokalny — ' + currentUser);
+  syncStatusSet('', 'Tryb lokalny — ' + currentBranch.name);
   syncNoTripsToEntries(); syncVacationsToEntries(); ensureEntryDates(); render(); updateGeoConflicts();
   spReady = true;
 }
@@ -2886,16 +2980,21 @@ function loginLocal() {
 
 ensureMechFields();
 setupCityAutocomplete();
+initBranchSelector();
 initMsal();
 
 if (spConfigured) {
   const tok = sessionStorage.getItem('sp_token');
   const exp = parseInt(sessionStorage.getItem('sp_token_exp') || '0');
-  if (tok && exp > Date.now()) {
+  if (tok && exp > Date.now() && currentBranch) {
+    // Token valid + branch known (restored from sessionStorage in initMsal)
     hideLoginPage();
     spLoad();
   } else {
     showLoginPage();
+    // If branch was saved before redirect, pre-select it
+    const savedId = sessionStorage.getItem('selected_branch');
+    if (savedId) selectBranch(savedId);
   }
 } else {
   hideLoginPage();
