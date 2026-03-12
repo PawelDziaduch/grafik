@@ -831,37 +831,54 @@
     margin-left: 5px; vertical-align: middle;
   }
 
+  /* ROLES */
+  .role-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 0.7rem; font-weight: 700; padding: 2px 8px;
+    border-radius: 20px; border: 1px solid;
+  }
+  .role-badge.superadmin { background: rgba(250,204,21,.2); border-color: rgba(250,204,21,.5); color: #fbbf24; }
+  .role-badge.kierownik  { background: rgba(255,222,0,.15);  border-color: rgba(255,222,0,.4);  color: #FFDE00; }
+  .role-badge.zastepca   { background: rgba(59,130,246,.15); border-color: rgba(59,130,246,.4); color: #60a5fa; }
+  .role-badge.dyspozytor { background: rgba(52,211,153,.15); border-color: rgba(52,211,153,.4); color: #34d399; }
+  .role-badge.pracownik  { background: rgba(148,163,184,.1); border-color: rgba(148,163,184,.3);color: #94a3b8; }
+
+  .readonly-banner {
+    background: rgba(59,130,246,.1); border-bottom: 1px solid rgba(59,130,246,.3);
+    padding: 6px 20px; font-size: 0.78rem; color: #93c5fd;
+    display: none; align-items: center; gap: 8px; justify-content: center;
+  }
+  .readonly-banner.show { display: flex; }
+
+  /* ROLES MANAGER */
+  .role-row {
+    display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center;
+    background: var(--surface2); border-radius: 8px; padding: 8px 12px; margin-bottom: 6px;
+  }
+  .role-select {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); font-family: 'DM Sans',sans-serif; font-size: 0.82rem;
+    padding: 5px 10px; outline: none;
+  }
+  .role-select:focus { border-color: var(--accent2); }
+
   /* BRANCH SELECTOR */
   .branch-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 20px;
-    max-height: 280px;
-    overflow-y: auto;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    margin-bottom: 20px; max-height: 280px; overflow-y: auto;
   }
   .branch-btn {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 12px;
-    background: var(--surface2);
-    border: 2px solid var(--border);
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all .15s;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--text);
-    text-align: left;
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    background: var(--surface2); border: 2px solid var(--border); border-radius: 10px;
+    cursor: pointer; transition: all .15s; font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; font-weight: 500; color: var(--text); text-align: left;
   }
   .branch-btn:hover { border-color: var(--accent2); background: rgba(74,156,58,.1); }
   .branch-btn.selected { border-color: var(--jd-yellow); background: rgba(255,222,0,.1); color: var(--jd-yellow); }
   .branch-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   .branch-selector-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 0.72rem; font-weight: 700;
-    letter-spacing: .08em; text-transform: uppercase;
-    color: var(--text2); margin-bottom: 10px;
+    font-family: 'Syne', sans-serif; font-size: 0.72rem; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--text2); margin-bottom: 10px;
   }
   #page-login {
     position: fixed; inset: 0; z-index: 9999;
@@ -1002,12 +1019,14 @@
   <nav class="main-nav" id="mainNav">
     <button class="nav-tab active" data-page="schedule" onclick="switchPage('schedule')">📅 Grafik</button>
     <button class="nav-tab" data-page="month" onclick="switchPage('month')">🗓 Miesiąc</button>
-    <button class="nav-tab" data-page="mechanics" onclick="switchPage('mechanics')">👷 Mechanicy</button>
+    <button class="nav-tab" data-page="mechanics" onclick="switchPage('mechanics')" id="tabMechanics">👷 Mechanicy</button>
     <button class="nav-tab" data-page="history" onclick="switchPage('history')">📋 Historia</button>
+    <button class="nav-tab" data-page="roles" onclick="switchPage('roles')" id="tabRoles" style="display:none">👥 Role</button>
   </nav>
   <div class="header-actions" id="scheduleActions" style="display:flex;align-items:center;gap:8px">
+    <span id="currentUserBadge" class="role-badge" style="display:none"></span>
     <div id="syncStatus" class="sync-status"><span id="syncIcon">&#x23F3;</span><span id="syncText">Inicjalizacja...</span></div>
-    <button class="btn btn-secondary" onclick="spSave(true)" title="Zapisz teraz do SharePoint" style="font-size:0.75rem;padding:4px 9px">&#x1F4BE;</button>
+    <button class="btn btn-secondary" onclick="spSave(true)" title="Zapisz teraz" style="font-size:0.75rem;padding:4px 9px" id="btnSaveManual">&#x1F4BE;</button>
     <button class="btn btn-secondary" id="addMechBtn">+ Mechanik</button>
     <button class="btn btn-primary" id="addEntryBtn">+ Wpis</button>
   </div>
@@ -1021,7 +1040,14 @@
   <div class="header-actions" id="historyActions" style="display:none;align-items:center;gap:8px">
     <div class="sync-status" style="font-size:0.72rem">📋 Historia zmian</div>
   </div>
+  <div class="header-actions" id="rolesActions" style="display:none;align-items:center;gap:8px">
+    <div class="sync-status ok" style="font-size:0.72rem">👥 Zarządzanie rolami</div>
+  </div>
 </header>
+
+<div class="readonly-banner" id="readonlyBanner">
+  🔒 <span id="readonlyBannerText">Tryb podglądu</span>
+</div>
 
 <!-- PAGE: LOGIN -->
 <div id="page-login" style="display:flex">
@@ -1035,6 +1061,11 @@
 
     <div id="branchSelectedInfo" style="display:none;margin-bottom:16px;background:rgba(255,222,0,.1);border:1px solid rgba(255,222,0,.3);border-radius:8px;padding:10px 14px;font-size:0.85rem;color:var(--jd-yellow);font-weight:600;text-align:center"></div>
 
+    <div id="localNameGroup" style="display:none;margin-bottom:12px">
+      <div style="font-size:0.75rem;color:var(--text2);margin-bottom:5px">Twoje imię (widoczne w historii)</div>
+      <input class="form-input" id="localNameInput" placeholder="np. Jan Kowalski" style="width:100%;box-sizing:border-box">
+    </div>
+
     <button class="login-btn-ms" onclick="loginWithMicrosoft()" id="loginMsBtn" disabled style="opacity:.5;cursor:not-allowed">
       <svg width="20" height="20" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
@@ -1044,14 +1075,46 @@
       </svg>
       Zaloguj przez Microsoft
     </button>
-    <button class="login-btn-local" onclick="loginLocal()" id="loginLocalBtn" disabled style="opacity:.5;cursor:not-allowed">
+    <button class="login-btn-local" onclick="showLocalLogin()" id="loginLocalBtn" disabled style="opacity:.5;cursor:not-allowed">
       Pracuj lokalnie (bez zapisu do chmury)
     </button>
+    <div id="localLoginForm" style="display:none;margin-top:10px">
+      <button class="btn btn-primary" onclick="loginLocal()" style="width:100%;padding:10px">Wejdź →</button>
+    </div>
     <div class="login-info">
       Dane każdego oddziału są przechowywane osobno na SharePoint.<br>
       Wymagane konto Microsoft 365 firmy Wanicki.
     </div>
   </div>
+</div>
+
+<!-- PAGE: ROLES -->
+<div id="page-roles" style="display:none;padding:28px;max-width:700px;margin:0 auto">
+  <div style="margin-bottom:24px">
+    <h2 style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800">👥 Role użytkowników</h2>
+    <p style="color:var(--text2);font-size:0.85rem;margin-top:4px">Przypisz role osobom w oddziale <strong id="rolesbranchName"></strong>. Role zapisywane są razem z danymi oddziału.</p>
+  </div>
+
+  <div style="background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:20px;font-size:0.82rem;color:var(--text2)">
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+      <div><span class="role-badge kierownik">👑 Kierownik</span> — pełny dostęp, zarządzanie rolami</div>
+      <div><span class="role-badge zastepca">🔑 Zastępca</span> — edycja grafiku i wpisów</div>
+      <div><span class="role-badge dyspozytor">📋 Dyspozytor</span> — edycja wpisów, bez mechaników</div>
+      <div><span class="role-badge pracownik">👁 Pracownik</span> — tylko podgląd</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:16px;display:flex;gap:10px;align-items:center">
+    <input class="form-input" id="newRoleEmail" placeholder="email lub imię osoby" style="flex:1">
+    <select class="role-select" id="newRoleType">
+      <option value="zastepca">Zastępca</option>
+      <option value="dyspozytor">Dyspozytor</option>
+      <option value="pracownik">Pracownik</option>
+    </select>
+    <button class="btn btn-primary" onclick="addRoleUser()" style="white-space:nowrap">+ Dodaj</button>
+  </div>
+
+  <div id="rolesList"></div>
 </div>
 
 <!-- PAGE: SCHEDULE -->
@@ -1278,6 +1341,158 @@ const TYPES = [
 
 const DAYS_PL   = ['Pon','Wt','Śr','Czw','Pt','Sob','Nd'];
 const DAYS_FULL = ['Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota','Niedziela'];
+
+// ── ROLE SYSTEM ───────────────────────────────────────────────────────────────
+// Roles: superadmin | kierownik | zastepca | dyspozytor | pracownik
+
+const SUPER_ADMINS = ['pawel.dziaduch@wanicki.pl'];
+
+let branchRoles = [];
+let currentRole = 'pracownik';
+
+const ROLE_LABELS = {
+  superadmin: { label: '⚡ Super Admin', cls: 'superadmin'  },
+  kierownik:  { label: '👑 Kierownik',  cls: 'kierownik'  },
+  zastepca:   { label: '🔑 Zastępca',   cls: 'zastepca'   },
+  dyspozytor: { label: '📋 Dyspozytor', cls: 'dyspozytor' },
+  pracownik:  { label: '👁 Pracownik',  cls: 'pracownik'  },
+};
+
+const ROLE_PERMS = {
+  superadmin: { editEntries: true, editMechanics: true, deleteMechanics: true, manageRoles: true, allBranches: true },
+  kierownik:  { editEntries: true, editMechanics: true, deleteMechanics: true,  manageRoles: true,  allBranches: false },
+  zastepca:   { editEntries: true, editMechanics: true, deleteMechanics: false, manageRoles: false, allBranches: false },
+  dyspozytor: { editEntries: true, editMechanics: false,deleteMechanics: false, manageRoles: false, allBranches: false },
+  pracownik:  { editEntries: false,editMechanics: false,deleteMechanics: false, manageRoles: false, allBranches: false },
+};
+
+function can(perm) {
+  return !!(ROLE_PERMS[currentRole]?.[perm]);
+}
+
+function isSuperAdmin(user) {
+  if (!user) return false;
+  return SUPER_ADMINS.some(sa => sa.toLowerCase() === user.toLowerCase().trim());
+}
+
+function determineRole(user) {
+  if (!user) return 'pracownik';
+  if (isSuperAdmin(user)) return 'superadmin';
+  const lower = user.toLowerCase().trim();
+  const match = branchRoles.find(r =>
+    r.nameOrEmail.toLowerCase().trim() === lower ||
+    lower.includes(r.nameOrEmail.toLowerCase().trim()) ||
+    r.nameOrEmail.toLowerCase().trim().includes(lower)
+  );
+  if (match) return match.role;
+  if (branchRoles.length === 0) {
+    branchRoles.push({ nameOrEmail: user, role: 'kierownik' });
+    return 'kierownik';
+  }
+  return 'pracownik';
+}
+
+function applyRoleUI() {
+  const perms = ROLE_PERMS[currentRole];
+  const badge = document.getElementById('currentUserBadge');
+  if (badge) {
+    const info = ROLE_LABELS[currentRole];
+    badge.textContent = `${info.label} — ${currentUser}`;
+    badge.className = `role-badge ${info.cls}`;
+    badge.style.display = 'inline-flex';
+  }
+  // Readonly banner
+  const banner = document.getElementById('readonlyBanner');
+  const bannerText = document.getElementById('readonlyBannerText');
+  if (!perms.editEntries) {
+    banner.classList.add('show');
+    bannerText.textContent = `Tryb podglądu — ${ROLE_LABELS[currentRole].label}. Nie możesz edytować grafiku.`;
+  } else {
+    banner.classList.remove('show');
+  }
+  // Hide/show add buttons
+  const addEntry = document.getElementById('addEntryBtn');
+  const addMech  = document.getElementById('addMechBtn');
+  const addMechSidebar = document.getElementById('addMechSidebar');
+  const saveBtn  = document.getElementById('btnSaveManual');
+  if (addEntry) addEntry.style.display = perms.editEntries ? '' : 'none';
+  if (addMech)  addMech.style.display  = perms.editMechanics ? '' : 'none';
+  if (addMechSidebar) addMechSidebar.style.display = perms.editMechanics ? '' : 'none';
+  if (saveBtn)  saveBtn.style.display  = perms.editEntries ? '' : 'none';
+  // Show/hide Mechanicy tab
+  const tabMech = document.getElementById('tabMechanics');
+  if (tabMech) tabMech.style.display = perms.editMechanics ? '' : 'none';
+  // Show/hide Role tab
+  const tabRoles = document.getElementById('tabRoles');
+  if (tabRoles) tabRoles.style.display = perms.manageRoles ? '' : 'none';
+}
+
+// ── ROLES PAGE ────────────────────────────────────────────────────────────────
+
+function renderRolesPage() {
+  const nameEl = document.getElementById('rolesbranchName');
+  if (nameEl && currentBranch) nameEl.textContent = '— ' + currentBranch.name;
+
+  const list = document.getElementById('rolesList');
+  if (!list) return;
+
+  // Super admin info banner
+  const saHtml = `<div style="background:rgba(250,204,21,.08);border:1px solid rgba(250,204,21,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:0.8rem;color:#fbbf24">
+    ⚡ Super Admin <strong>${SUPER_ADMINS.join(', ')}</strong> ma pełny dostęp do wszystkich oddziałów (wbudowane w aplikację).
+  </div>`;
+
+  if (branchRoles.length === 0) {
+    list.innerHTML = saHtml + '<div style="text-align:center;padding:30px;color:var(--text2)">Brak przypisanych ról</div>';
+    return;
+  }
+  list.innerHTML = saHtml + branchRoles.map((r, i) => {
+    const info = ROLE_LABELS[r.role] || ROLE_LABELS.pracownik;
+    const isMe = r.nameOrEmail.toLowerCase().trim() === currentUser.toLowerCase().trim();
+    return `<div class="role-row">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="role-badge ${info.cls}">${info.label}</span>
+        <span style="font-size:0.88rem">${r.nameOrEmail}</span>
+        ${isMe ? '<span style="font-size:0.72rem;color:var(--text2)">(to Ty)</span>' : ''}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <select class="role-select" onchange="changeRole(${i}, this.value)">
+          ${['kierownik','zastepca','dyspozytor','pracownik'].map(rv =>
+            `<option value="${rv}" ${rv===r.role?'selected':''}>${ROLE_LABELS[rv].label}</option>`
+          ).join('')}
+        </select>
+        ${!isMe ? `<button class="btn btn-danger" onclick="removeRole(${i})" style="font-size:0.75rem;padding:4px 8px">✕</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function addRoleUser() {
+  const email = document.getElementById('newRoleEmail').value.trim();
+  const role  = document.getElementById('newRoleType').value;
+  if (!email) return;
+  const exists = branchRoles.find(r => r.nameOrEmail.toLowerCase() === email.toLowerCase());
+  if (exists) { exists.role = role; }
+  else { branchRoles.push({ nameOrEmail: email, role }); }
+  document.getElementById('newRoleEmail').value = '';
+  renderRolesPage();
+  spSave(true);
+}
+
+function changeRole(idx, role) {
+  if (branchRoles[idx]) { branchRoles[idx].role = role; renderRolesPage(); spSave(true); }
+}
+
+function removeRole(idx) {
+  branchRoles.splice(idx, 1);
+  renderRolesPage();
+  spSave(true);
+}
+
+function showLocalLogin() {
+  document.getElementById('localNameGroup').style.display = 'block';
+  document.getElementById('localLoginForm').style.display = 'block';
+  document.getElementById('loginLocalBtn').style.display = 'none';
+}
 
 const COLORS = [
   ['#f0a500','#1a1200'],['#3b82f6','#0a1a30'],['#22c55e','#0a2010'],
@@ -2169,6 +2384,7 @@ function closeModal() {
 }
 
 function saveEntry() {
+  if (!can('editEntries')) { alert('Nie masz uprawnień do edycji wpisów.'); return; }
   const mechId = parseInt(document.getElementById('fMech').value);
   const day    = parseInt(document.getElementById('fDay').value);
   const city   = document.getElementById('fCity').value.trim();
@@ -2220,6 +2436,7 @@ function saveEntry() {
 
 function deleteEntry(id, ev) {
   ev.stopPropagation();
+  if (!can('editEntries')) { alert('Nie masz uprawnień do usuwania wpisów.'); return; }
   const en = entries.find(x => x.id === id);
   if (en) {
     const m = mechanics.find(x => x.id === en.mechId);
@@ -2419,23 +2636,29 @@ function hideSuggestions() {
 let currentPage = 'schedule';
 
 function switchPage(page) {
+  // Permission guard
+  if (page === 'mechanics' && !can('editMechanics')) return;
+  if (page === 'roles'     && !can('manageRoles'))   return;
+
   currentPage = page;
-  const pageDisplays = { schedule: 'block', month: 'block', mechanics: 'block', history: 'block' };
-  ['schedule','month','mechanics','history'].forEach(p => {
+  const pages = ['schedule','month','mechanics','history','roles'];
+  pages.forEach(p => {
     const el = document.getElementById('page-' + p);
-    if (el) el.style.display = p === page ? (pageDisplays[p] || 'block') : 'none';
+    if (el) el.style.display = p === page ? 'block' : 'none';
   });
   document.getElementById('scheduleActions').style.display = page === 'schedule' ? 'flex' : 'none';
-  document.getElementById('mechActions').style.display = page === 'mechanics' ? 'flex' : 'none';
-  document.getElementById('monthActions').style.display = page === 'month' ? 'flex' : 'none';
-  document.getElementById('historyActions').style.display = page === 'history' ? 'flex' : 'none';
+  document.getElementById('mechActions').style.display     = page === 'mechanics' ? 'flex' : 'none';
+  document.getElementById('monthActions').style.display    = page === 'month'     ? 'flex' : 'none';
+  document.getElementById('historyActions').style.display  = page === 'history'   ? 'flex' : 'none';
+  document.getElementById('rolesActions').style.display    = page === 'roles'     ? 'flex' : 'none';
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.page === page));
   document.getElementById('weekNavBar').style.display = page === 'schedule' ? 'flex' : 'none';
 
   if (page === 'mechanics') renderMechCards();
-  if (page === 'schedule') { syncNoTripsToEntries(); render(); }
-  if (page === 'month') { renderMonth(); }
-  if (page === 'history') renderHistory();
+  if (page === 'schedule')  { syncNoTripsToEntries(); render(); }
+  if (page === 'month')     { renderMonth(); }
+  if (page === 'history')   renderHistory();
+  if (page === 'roles')     renderRolesPage();
 }
 
 // ── MECHANICS MANAGEMENT ──────────────────────────────────────────────────────
@@ -2666,6 +2889,7 @@ function syncNoTripsToEntries() {
 }
 
 function deleteMech(id) {
+  if (!can('deleteMechanics')) { alert('Nie masz uprawnień do usuwania mechaników.'); return; }
   if (!confirm('Na pewno usunąć tego mechanika? Wszystkie jego wpisy zostaną usunięte.')) return;
   const m = mechanics.find(x => x.id === id);
   if (m) logHistory('mech_delete', {mechName: m.name, spec: m.spec});
@@ -2830,15 +3054,16 @@ function syncStatusSet(state, text) {
 }
 
 function appStateToJSON() {
-  return JSON.stringify({ mechanics, entries, changeHistory });
+  return JSON.stringify({ mechanics, entries, changeHistory, branchRoles });
 }
 
 function appStateFromJSON(json) {
   try {
     const d = JSON.parse(json);
-    if (d.mechanics) mechanics = d.mechanics;
-    if (d.entries)   entries   = d.entries;
+    if (d.mechanics)    mechanics    = d.mechanics;
+    if (d.entries)      entries      = d.entries;
     if (d.changeHistory) changeHistory = d.changeHistory;
+    if (d.branchRoles)  branchRoles  = d.branchRoles;
     return true;
   } catch(err) { return false; }
 }
@@ -2921,6 +3146,8 @@ async function spLoad() {
     if (local) { appStateFromJSON(local); syncStatusSet('ok', 'Dane lokalne'); }
     else syncStatusSet('ok', 'Tryb lokalny');
     applyBranchTheme();
+    currentRole = determineRole(currentUser);
+    applyRoleUI();
     syncNoTripsToEntries(); syncVacationsToEntries(); ensureEntryDates(); render(); updateGeoConflicts();
     spReady = true; return;
   }
@@ -2935,16 +3162,22 @@ async function spLoad() {
       spLastSaved = item.GrafikData;
       syncStatusSet('ok', 'Wczytano ✔ — ' + (currentBranch?.name || ''));
     } else {
-      // Brak danych — nowy oddział, zacznij z pustym grafik
-      mechanics = [];
-      entries = [];
+      mechanics = []; entries = [];
       syncStatusSet('ok', 'Nowy grafik — ' + (currentBranch?.name || ''));
     }
   } catch(err) {
-    syncStatusSet('error', 'Błąd wczytania');
+    console.error('[SP] Load error:', err);
+    // FALLBACK: try localStorage
     const local = localStorage.getItem(localKey);
-    if (local) { appStateFromJSON(local); syncStatusSet('error', 'Offline — dane lokalne'); }
+    if (local) {
+      appStateFromJSON(local);
+      syncStatusSet('error', '⚠️ SP niedostępny — dane lokalne (' + currentBranch?.name + ')');
+    } else {
+      syncStatusSet('error', '⚠️ Brak połączenia z SharePoint');
+    }
   }
+  currentRole = determineRole(currentUser);
+  applyRoleUI();
   syncNoTripsToEntries(); syncVacationsToEntries(); ensureEntryDates(); render(); updateGeoConflicts();
   spReady = true;
 }
@@ -3020,13 +3253,15 @@ function loginWithMicrosoft() {
 
 function loginLocal() {
   if (!currentBranch) { alert('Wybierz oddział przed zalogowaniem.'); return; }
-  const nameInput = prompt('Twoje imię (do historii zmian):', 'Lokalny');
+  const nameInput = document.getElementById('localNameInput')?.value.trim();
   currentUser = nameInput || 'Lokalny';
   SP_LIST_NAME = currentBranch.listName;
   applyBranchTheme();
   hideLoginPage();
   const local = localStorage.getItem('grafik_serwis_backup_' + currentBranch.id);
   if (local) appStateFromJSON(local);
+  currentRole = determineRole(currentUser);
+  applyRoleUI();
   syncStatusSet('', 'Tryb lokalny — ' + currentBranch.name);
   syncNoTripsToEntries(); syncVacationsToEntries(); ensureEntryDates(); render(); updateGeoConflicts();
   spReady = true;
