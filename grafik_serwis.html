@@ -988,7 +988,7 @@
     <div class="sync-status ok" style="font-size:0.72rem">🗓 Widok miesięczny</div>
   </div>
   <div class="header-actions" id="historyActions" style="display:none;align-items:center;gap:8px">
-    <button class="btn btn-danger" onclick="clearHistory()" style="font-size:0.75rem;padding:5px 12px">🗑 Wyczyść historię</button>
+    <div class="sync-status" style="font-size:0.72rem">📋 Historia zmian</div>
   </div>
 </header>
 
@@ -1367,7 +1367,7 @@ function renderHistory() {
         <div class="history-title">${title}</div>
         ${meta ? `<div class="history-meta">${meta}</div>` : ''}
       </div>
-      <div class="history-time">${timeStr}<br><span style="font-size:0.68rem">${r.user}</span></div>
+      <div class="history-time">${timeStr}<br><span style="font-size:0.7rem;background:rgba(74,156,58,.15);color:#4ade80;border:1px solid rgba(74,156,58,.3);border-radius:4px;padding:1px 6px;margin-top:3px;display:inline-block">👤 ${r.user}</span></div>
     </div>`;
   }).join('');
 }
