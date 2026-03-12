@@ -661,7 +661,6 @@
      MONTHLY VIEW
   ═══════════════════════════════════════════════ */
   #page-month {
-    display: none;
     padding: 24px 28px;
     overflow-y: auto;
     height: calc(100vh - 57px);
@@ -773,7 +772,6 @@
      HISTORY VIEW
   ═══════════════════════════════════════════════ */
   #page-history {
-    display: none;
     padding: 24px 28px;
     overflow-y: auto;
     height: calc(100vh - 57px);
@@ -1062,7 +1060,7 @@
 </div>
 
 <!-- PAGE: MONTH -->
-<div id="page-month">
+<div id="page-month" style="display:none">
   <div class="month-header-row">
     <div class="month-nav">
       <button onclick="monthOffset--;renderMonth()">&#8592;</button>
@@ -1089,7 +1087,7 @@
 </div>
 
 <!-- PAGE: HISTORY -->
-<div id="page-history">
+<div id="page-history" style="display:none">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
     <div>
       <h2 style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800">📋 Historia zmian</h2>
@@ -2400,16 +2398,17 @@ let currentPage = 'schedule';
 
 function switchPage(page) {
   currentPage = page;
+  const pageDisplays = { schedule: 'block', month: 'block', mechanics: 'block', history: 'block' };
   ['schedule','month','mechanics','history'].forEach(p => {
     const el = document.getElementById('page-' + p);
-    if (el) el.style.display = p === page ? '' : 'none';
+    if (el) el.style.display = p === page ? (pageDisplays[p] || 'block') : 'none';
   });
-  document.getElementById('scheduleActions').style.display = page === 'schedule' ? '' : 'none';
-  document.getElementById('mechActions').style.display = page === 'mechanics' ? '' : 'none';
-  document.getElementById('monthActions').style.display = page === 'month' ? '' : 'none';
-  document.getElementById('historyActions').style.display = page === 'history' ? '' : 'none';
+  document.getElementById('scheduleActions').style.display = page === 'schedule' ? 'flex' : 'none';
+  document.getElementById('mechActions').style.display = page === 'mechanics' ? 'flex' : 'none';
+  document.getElementById('monthActions').style.display = page === 'month' ? 'flex' : 'none';
+  document.getElementById('historyActions').style.display = page === 'history' ? 'flex' : 'none';
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.page === page));
-  document.getElementById('weekNavBar').style.display = page === 'schedule' ? '' : 'none';
+  document.getElementById('weekNavBar').style.display = page === 'schedule' ? 'flex' : 'none';
 
   if (page === 'mechanics') renderMechCards();
   if (page === 'schedule') { syncNoTripsToEntries(); render(); }
