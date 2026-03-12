@@ -1234,6 +1234,16 @@
 <script>
 // ── DATA ─────────────────────────────────────────────────────────────────────
 
+const TYPES = [
+  {key:'wyjazd', label:'🚗 Wyjazd', icon:'🚗'},
+  {key:'praca',  label:'🔧 Praca w warsztacie', icon:'🔧'},
+  {key:'urlop',  label:'🌴 Urlop', icon:'🌴'},
+  {key:'choroba',label:'🤒 Choroba', icon:'🤒'},
+];
+
+const DAYS_PL   = ['Pon','Wt','Śr','Czw','Pt','Sob','Nd'];
+const DAYS_FULL = ['Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota','Niedziela'];
+
 const COLORS = [
   ['#f0a500','#1a1200'],['#3b82f6','#0a1a30'],['#22c55e','#0a2010'],
   ['#a78bfa','#1a1030'],['#f472b6','#30101a'],['#34d399','#0a2018'],
@@ -1987,16 +1997,6 @@ function render() {
 }
 
 // ── MODAL ─────────────────────────────────────────────────────────────────────
-
-const TYPES = [
-  {key:'wyjazd', label:'🚗 Wyjazd', icon:'🚗'},
-  {key:'praca',  label:'🔧 Praca w warsztacie', icon:'🔧'},
-  {key:'urlop',  label:'🌴 Urlop', icon:'🌴'},
-  {key:'choroba',label:'🤒 Choroba', icon:'🤒'},
-];
-
-const DAYS_PL = ['Pon','Wt','Śr','Czw','Pt','Sob','Nd'];
-const DAYS_FULL = ['Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota','Niedziela'];
 
 let weekOffset = 0;
 let editingEntry = null;
