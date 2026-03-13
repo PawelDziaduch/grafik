@@ -1330,15 +1330,21 @@
       <input type="hidden" id="fCityLat">
       <input type="hidden" id="fCityLon">
     </div>
-    <div class="form-group" id="orderGroup" style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end">
-      <div>
-        <label class="form-label">Numer zlecenia</label>
-        <input class="form-input" id="fOrder" placeholder="np. ZL50/25/1250" autocomplete="off" style="font-family:'DM Sans',monospace;letter-spacing:0.03em">
+    <div class="form-group" id="orderGroup">
+      <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end">
+        <div>
+          <label class="form-label">Numer zlecenia</label>
+          <input class="form-input" id="fOrder" placeholder="np. SV-00123" autocomplete="off" style="font-family:'DM Sans',monospace;letter-spacing:0.03em" oninput="bcClearInfo()">
+        </div>
+        <div>
+          <label class="form-label">Priorytet</label>
+          <div id="priorityPicker" style="display:flex;gap:5px"></div>
+        </div>
       </div>
-      <div>
-        <label class="form-label">Priorytet</label>
-        <div id="priorityPicker" style="display:flex;gap:5px"></div>
-      </div>
+      <button type="button" class="btn btn-secondary" onclick="fetchFromBC()" id="bcFetchBtn" style="margin-top:8px;font-size:0.78rem;padding:5px 12px;width:100%">
+        🔗 Pobierz dane z Business Central
+      </button>
+      <div id="bcInfo" style="display:none;margin-top:8px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);border-radius:8px;padding:10px 12px;font-size:0.82rem;line-height:1.7"></div>
     </div>
     <div class="form-group">
       <label class="form-label">Notatka (opcjonalnie)</label>
@@ -3441,6 +3447,128 @@ function enterPreviewMode() {
      <button class="btn btn-primary" onclick="showLoginPage();document.querySelector('header').style.display='none'" style="font-size:0.72rem;padding:3px 10px;margin-left:8px">🔑 Zaloguj się</button>`;
   syncNoTripsToEntries(); ensureEntryDates(); render();
   spReady = false; // nie zapisuj
+}
+
+// ── BUSINESS CENTRAL INTEGRATION ─────────────────────────────────────────────
+
+const BC_CONFIG = {
+  baseUrl:  'https://bc.wanicki.pl:6048/PRELIVE/ODataV4/Company(\'WS\')',
+  endpoint: 'ServiceOrders',
+  // Dane dostępowe — wypełnić danymi z BC (Web Service Access Key)
+  // Logowanie Basic Auth: użytkownik BC + klucz dostępu (nie hasło!)
+  user:     '',   // np. 'admin' lub email
+  key:      '',   // Web Service Access Key z karty użytkownika BC
+};
+
+// Mapowanie pól OData BC → pola grafiku
+// Dostosuj nazwy pól jeśli BC zwraca inne nazwy
+function mapBCOrder(item) {
+  return {
+    customer:    item.Sell_to_Customer_Name || item.Customer_Name || '',
+    city:        item.Sell_to_City          || item.Ship_to_City  || item.City || '',
+    description: item.Description           || item.Item_Description || '',
+    machineType: item.Description_2         || item.Machine_Type  || '',
+    status:      item.Status                || '',
+    no:          item.No                    || item.Document_No   || '',
+  };
+}
+
+const BC_STATUS_MAP = {
+  'Pending':    '🟡 Oczekuje',
+  'In Process': '🔵 W realizacji',
+  'Finished':   '🟢 Zakończone',
+  'On Hold':    '🔴 Wstrzymane',
+};
+
+let bcLastResult = null;
+
+async function fetchFromBC() {
+  const orderNo = document.getElementById('fOrder').value.trim();
+  if (!orderNo) { alert('Wpisz numer zlecenia.'); return; }
+
+  const btn = document.getElementById('bcFetchBtn');
+  const info = document.getElementById('bcInfo');
+  btn.textContent = '⏳ Pobieranie...';
+  btn.disabled = true;
+  info.style.display = 'none';
+
+  try {
+    // Filtruj po numerze zlecenia
+    const filter = encodeURIComponent(`No eq '${orderNo}'`);
+    const url = `${BC_CONFIG.baseUrl}/${BC_CONFIG.endpoint}?$filter=${filter}&$top=1`;
+
+    const headers = { 'Accept': 'application/json' };
+    if (BC_CONFIG.user && BC_CONFIG.key) {
+      headers['Authorization'] = 'Basic ' + btoa(BC_CONFIG.user + ':' + BC_CONFIG.key);
+    }
+
+    const resp = await fetch(url, { headers });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+
+    if (!data.value?.length) {
+      info.style.display = 'block';
+      info.innerHTML = '❌ Nie znaleziono zlecenia <strong>' + orderNo + '</strong> w Business Central.';
+      btn.textContent = '🔗 Pobierz dane z Business Central';
+      btn.disabled = false;
+      return;
+    }
+
+    const order = mapBCOrder(data.value[0]);
+    bcLastResult = order;
+
+    const statusLabel = BC_STATUS_MAP[order.status] || order.status || '—';
+    const statusColor = order.status === 'Finished' ? '#4ade80'
+                      : order.status === 'On Hold'  ? '#f87171'
+                      : order.status === 'In Process'? '#60a5fa' : '#fbbf24';
+
+    info.style.display = 'block';
+    info.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <strong style="color:var(--text)">📋 ${order.no}</strong>
+        <span style="font-size:0.75rem;background:${statusColor}22;color:${statusColor};border:1px solid ${statusColor}44;border-radius:20px;padding:2px 8px">${statusLabel}</span>
+      </div>
+      ${order.customer ? `<div>👤 <b>${order.customer}</b></div>` : ''}
+      ${order.city     ? `<div>📍 ${order.city}</div>` : ''}
+      ${order.description || order.machineType ? `<div>🚜 ${[order.description, order.machineType].filter(Boolean).join(' — ')}</div>` : ''}
+      ${order.city ? `<button type="button" class="btn btn-primary" onclick="applyBCCity()" style="margin-top:8px;font-size:0.75rem;padding:4px 10px">📍 Użyj tej miejscowości</button>` : ''}
+    `;
+
+    // Uzupełnij pole notatki opisem jeśli puste
+    const noteEl = document.getElementById('fNote');
+    if (noteEl && !noteEl.value && order.description) {
+      noteEl.value = [order.description, order.machineType].filter(Boolean).join(' — ');
+    }
+
+  } catch(err) {
+    info.style.display = 'block';
+    if (err.message.includes('401') || err.message.includes('403')) {
+      info.innerHTML = '🔒 Brak dostępu do BC — sprawdź dane logowania w konfiguracji.';
+    } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+      info.innerHTML = '🌐 Nie można połączyć się z BC — sprawdź VPN lub dostępność serwera.';
+    } else {
+      info.innerHTML = '❌ Błąd: ' + err.message;
+    }
+  }
+
+  btn.textContent = '🔗 Pobierz dane z Business Central';
+  btn.disabled = false;
+}
+
+function applyBCCity() {
+  if (!bcLastResult?.city) return;
+  // Wstaw miejscowość do pola wyszukiwania miasta
+  const citySearch = document.getElementById('fCitySearch');
+  if (citySearch) {
+    citySearch.value = bcLastResult.city;
+    citySearch.dispatchEvent(new Event('input'));
+  }
+}
+
+function bcClearInfo() {
+  const info = document.getElementById('bcInfo');
+  if (info) { info.style.display = 'none'; info.innerHTML = ''; }
+  bcLastResult = null;
 }
 
 // ── LOGOUT & SIDEBAR ──────────────────────────────────────────────────────────
