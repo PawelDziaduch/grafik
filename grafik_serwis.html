@@ -1427,20 +1427,6 @@ function determineRole(user) {
     r.nameOrEmail.toLowerCase().trim().includes(lower)
   );
   if (match) return match.role;
-  // Bootstrap: tylko jeśli lista ról jest całkowicie pusta (nowy oddział)
-  if (branchRoles.length === 0) {
-    const isFirst = confirm(
-      `Witaj ${user}!\n\nJesteś pierwszą osobą logującą się do tego oddziału.\n` +
-      `Czy jesteś kierownikiem konfigurującym oddział?\n\n` +
-      `OK = Kierownik (pełny dostęp)\nAnuluj = Pracownik (tylko podgląd)`
-    );
-    if (isFirst) {
-      branchRoles.push({ nameOrEmail: user, role: 'kierownik' });
-      return 'kierownik';
-    }
-    return 'pracownik';
-  }
-  // Nieznany użytkownik gdy role już istnieją = tylko podgląd
   return 'pracownik';
 }
 
