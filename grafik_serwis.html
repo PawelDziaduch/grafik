@@ -109,14 +109,51 @@
     display: grid;
     grid-template-columns: 220px 1fr 300px;
     height: calc(100vh - 57px);
+    transition: grid-template-columns .2s ease;
+  }
+  .main-layout.sidebar-collapsed {
+    grid-template-columns: 40px 1fr 300px;
   }
 
   /* SIDEBAR - mechanicy */
   .sidebar {
     background: var(--surface);
     border-right: 1px solid var(--border);
-    overflow-y: auto;
+    overflow: hidden;
     padding: 16px 0;
+    position: relative;
+    transition: all .2s ease;
+  }
+  .sidebar-collapsed .sidebar {
+    padding: 16px 0 0;
+  }
+
+  .sidebar-toggle {
+    position: absolute;
+    top: 10px; right: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text2);
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: all .15s;
+    z-index: 10;
+    flex-shrink: 0;
+  }
+  .sidebar-toggle:hover { background: var(--surface); color: var(--text); }
+
+  .sidebar-content {
+    opacity: 1;
+    transition: opacity .15s;
+    overflow-y: auto;
+    height: calc(100% - 40px);
+  }
+  .sidebar-collapsed .sidebar-content {
+    opacity: 0;
+    pointer-events: none;
   }
 
   .sidebar-title {
@@ -1029,6 +1066,7 @@
     <button class="btn btn-secondary" onclick="spSave(true)" title="Zapisz teraz" style="font-size:0.75rem;padding:4px 9px" id="btnSaveManual">&#x1F4BE;</button>
     <button class="btn btn-secondary" id="addMechBtn">+ Mechanik</button>
     <button class="btn btn-primary" id="addEntryBtn">+ Wpis</button>
+    <button class="btn btn-secondary" onclick="logout()" title="Wyloguj" style="font-size:0.75rem;padding:4px 9px">🚪</button>
   </div>
   <div class="header-actions" id="mechActions" style="display:none;align-items:center;gap:8px">
     <div id="syncStatus2" class="sync-status"><span id="syncIcon2">&#x23F3;</span><span id="syncText2">Inicjalizacja...</span></div>
@@ -1119,11 +1157,14 @@
 
 <!-- PAGE: SCHEDULE -->
 <div id="page-schedule">
-<div class="main-layout">
+<div class="main-layout" id="mainLayout">
   <div class="sidebar">
-    <div class="sidebar-title">Mechanicy</div>
-    <div id="mechList"></div>
-    <button class="add-mech-btn" id="addMechSidebar">+ Dodaj mechanika</button>
+    <button class="sidebar-toggle" onclick="toggleSidebar()" id="sidebarToggleBtn" title="Zwiń/rozwiń">◀</button>
+    <div class="sidebar-content">
+      <div class="sidebar-title">Mechanicy</div>
+      <div id="mechList"></div>
+      <button class="add-mech-btn" id="addMechSidebar">+ Dodaj mechanika</button>
+    </div>
   </div>
 
   <div class="grid-area">
@@ -3314,6 +3355,50 @@ function loginLocal() {
   syncStatusSet('', 'Tryb lokalny — ' + currentBranch.name);
   syncNoTripsToEntries(); syncVacationsToEntries(); ensureEntryDates(); render(); updateGeoConflicts();
   spReady = true;
+}
+
+// ── LOGOUT & SIDEBAR ──────────────────────────────────────────────────────────
+
+function logout() {
+  if (!confirm('Wylogować się?')) return;
+  sessionStorage.removeItem('sp_token');
+  sessionStorage.removeItem('sp_token_exp');
+  sessionStorage.removeItem('selected_branch');
+  currentBranch = null;
+  currentUser = '';
+  currentRole = 'pracownik';
+  branchRoles = [];
+  mechanics = [];
+  entries = [];
+  changeHistory = [];
+  _siteId = null;
+  spReady = false;
+  spLastSaved = null;
+  // Reset UI
+  document.querySelector('header').style.display = 'none';
+  document.getElementById('readonlyBanner').classList.remove('show');
+  switchPage('schedule');
+  showLoginPage();
+  // Re-init branch selector
+  initBranchSelector();
+  document.getElementById('branchSelectedInfo').style.display = 'none';
+  const msBtn = document.getElementById('loginMsBtn');
+  const localBtn = document.getElementById('loginLocalBtn');
+  msBtn.disabled = true; msBtn.style.opacity = '.5'; msBtn.style.cursor = 'not-allowed';
+  localBtn.disabled = true; localBtn.style.opacity = '.5'; localBtn.style.cursor = 'not-allowed';
+  document.getElementById('localNameGroup').style.display = 'none';
+  document.getElementById('localLoginForm').style.display = 'none';
+  document.getElementById('loginLocalBtn').style.display = '';
+}
+
+let sidebarCollapsed = false;
+function toggleSidebar() {
+  sidebarCollapsed = !sidebarCollapsed;
+  const layout = document.getElementById('mainLayout');
+  const btn = document.getElementById('sidebarToggleBtn');
+  layout.classList.toggle('sidebar-collapsed', sidebarCollapsed);
+  btn.textContent = sidebarCollapsed ? '▶' : '◀';
+  btn.title = sidebarCollapsed ? 'Rozwiń mechaników' : 'Zwiń mechaników';
 }
 
 // ── INIT ───────────────────────────────────────────────────────────────────────
