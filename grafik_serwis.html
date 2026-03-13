@@ -3074,6 +3074,9 @@ async function graphRequest(method, url, body, token) {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   };
+  if (method === 'GET') {
+    headers['Prefer'] = 'HonorNonIndexedQueriesWarningMayFailRandomly';
+  }
   const resp = await fetch(url, {
     method,
     headers,
