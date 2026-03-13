@@ -1079,7 +1079,8 @@
     <div class="sync-status" style="font-size:0.72rem">📋 Historia zmian</div>
   </div>
   <div class="header-actions" id="rolesActions" style="display:none;align-items:center;gap:8px">
-    <div class="sync-status ok" style="font-size:0.72rem">👥 Zarządzanie rolami</div>
+    <div class="sync-status ok" style="font-size:0.72rem">👥 Role użytkowników</div>
+    <button class="btn btn-primary" onclick="saveRoles()" style="font-size:0.75rem;padding:4px 10px">💾 Zapisz role</button>
   </div>
 </header>
 
@@ -1120,12 +1121,15 @@
 
 <!-- PAGE: ROLES -->
 <div id="page-roles" style="display:none;padding:28px;max-width:700px;margin:0 auto">
-  <div style="margin-bottom:24px">
-    <h2 style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800">👥 Role użytkowników</h2>
-    <p style="color:var(--text2);font-size:0.85rem;margin-top:4px">Przypisz role osobom w oddziale <strong id="rolesbranchName"></strong>. Role zapisywane są razem z danymi oddziału.</p>
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:16px">
+    <div>
+      <h2 style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800">👥 Role użytkowników</h2>
+      <p style="color:var(--text2);font-size:0.85rem;margin-top:4px">Oddział <strong id="rolesbranchName"></strong> — osoby które się zalogowały pojawiają się automatycznie.</p>
+    </div>
+    <button class="btn btn-primary" id="saveRolesBtn" onclick="saveRoles()" style="white-space:nowrap;flex-shrink:0">💾 Zapisz role</button>
   </div>
 
-  <div style="background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:20px;font-size:0.82rem;color:var(--text2)">
+  <div style="background:var(--surface2);border-radius:10px;padding:14px 16px;margin-bottom:20px;font-size:0.82rem;color:var(--text2)">
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
       <div><span class="role-badge kierownik">👑 Kierownik</span> — pełny dostęp, zarządzanie rolami</div>
       <div><span class="role-badge zastepca">🔑 Zastępca</span> — edycja grafiku i wpisów</div>
@@ -1134,17 +1138,21 @@
     </div>
   </div>
 
-  <div style="margin-bottom:16px;display:flex;gap:10px;align-items:center">
-    <input class="form-input" id="newRoleEmail" placeholder="email lub imię osoby" style="flex:1">
-    <select class="role-select" id="newRoleType">
-      <option value="zastepca">Zastępca</option>
-      <option value="dyspozytor">Dyspozytor</option>
-      <option value="pracownik">Pracownik</option>
-    </select>
-    <button class="btn btn-primary" onclick="addRoleUser()" style="white-space:nowrap">+ Dodaj</button>
-  </div>
-
   <div id="rolesList"></div>
+
+  <details style="margin-top:20px">
+    <summary style="font-size:0.8rem;color:var(--text2);cursor:pointer;padding:8px 0">+ Dodaj ręcznie (email)</summary>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:10px">
+      <input class="form-input" id="newRoleEmail" placeholder="email osoby" style="flex:1">
+      <select class="role-select" id="newRoleType">
+        <option value="pracownik">👁 Pracownik</option>
+        <option value="dyspozytor">📋 Dyspozytor</option>
+        <option value="zastepca">🔑 Zastępca</option>
+        <option value="kierownik">👑 Kierownik</option>
+      </select>
+      <button class="btn btn-secondary" onclick="addRoleUser()" style="white-space:nowrap">+ Dodaj</button>
+    </div>
+  </details>
 </div>
 
 <!-- PAGE: SCHEDULE -->
@@ -1382,6 +1390,7 @@ const SUPER_ADMINS = ['pawel.dziaduch@wanicki.pl'];
 
 let branchRoles = [];
 let currentRole = 'pracownik';
+let knownUsers  = []; // [{ email, name, lastSeen }] — wszyscy którzy się zalogowali
 
 const ROLE_LABELS = {
   superadmin: { label: '⚡ Super Admin', cls: 'superadmin'  },
@@ -1472,6 +1481,19 @@ function applyRoleUI() {
 
 // ── ROLES PAGE ────────────────────────────────────────────────────────────────
 
+function registerKnownUser(user) {
+  if (!user || user === 'Gość' || user === 'Lokalny' || isSuperAdmin(user)) return;
+  const existing = knownUsers.find(u => u.email.toLowerCase() === user.toLowerCase());
+  const now = new Date().toISOString().slice(0, 10);
+  if (existing) {
+    existing.lastSeen = now;
+  } else {
+    knownUsers.push({ email: user, lastSeen: now });
+  }
+  // Zapisz od razu żeby inni widzieli nowego użytkownika
+  if (spReady) spSave(true);
+}
+
 function renderRolesPage() {
   const nameEl = document.getElementById('rolesbranchName');
   if (nameEl && currentBranch) nameEl.textContent = '— ' + currentBranch.name;
@@ -1479,34 +1501,99 @@ function renderRolesPage() {
   const list = document.getElementById('rolesList');
   if (!list) return;
 
-  // Super admin info banner
-  const saHtml = `<div style="background:rgba(250,204,21,.08);border:1px solid rgba(250,204,21,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:0.8rem;color:#fbbf24">
-    ⚡ Super Admin <strong>${SUPER_ADMINS.join(', ')}</strong> ma pełny dostęp do wszystkich oddziałów (wbudowane w aplikację).
+  // Super admin banner
+  const saHtml = `<div style="background:rgba(250,204,21,.08);border:1px solid rgba(250,204,21,.25);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:0.8rem;color:#fbbf24">
+    ⚡ Super Admin <strong>${SUPER_ADMINS.join(', ')}</strong> — pełny dostęp do wszystkich oddziałów.
   </div>`;
 
-  if (branchRoles.length === 0) {
-    list.innerHTML = saHtml + '<div style="text-align:center;padding:30px;color:var(--text2)">Brak przypisanych ról</div>';
-    return;
-  }
-  list.innerHTML = saHtml + branchRoles.map((r, i) => {
-    const info = ROLE_LABELS[r.role] || ROLE_LABELS.pracownik;
-    const isMe = r.nameOrEmail.toLowerCase().trim() === currentUser.toLowerCase().trim();
-    return `<div class="role-row">
-      <div style="display:flex;align-items:center;gap:10px">
-        <span class="role-badge ${info.cls}">${info.label}</span>
-        <span style="font-size:0.88rem">${r.nameOrEmail}</span>
-        ${isMe ? '<span style="font-size:0.72rem;color:var(--text2)">(to Ty)</span>' : ''}
+  // Osoby bez roli (zalogowały się ale nie mają jeszcze przypisanej roli)
+  const pending = knownUsers.filter(u =>
+    !isSuperAdmin(u.email) &&
+    !branchRoles.find(r => r.nameOrEmail.toLowerCase() === u.email.toLowerCase())
+  );
+
+  const pendingHtml = pending.length > 0 ? `
+    <div style="margin-bottom:20px">
+      <div style="font-family:'Syne',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);margin-bottom:8px">
+        🕐 Oczekują na przypisanie roli (${pending.length})
       </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <select class="role-select" onchange="changeRole(${i}, this.value)">
-          ${['kierownik','zastepca','dyspozytor','pracownik'].map(rv =>
-            `<option value="${rv}" ${rv===r.role?'selected':''}>${ROLE_LABELS[rv].label}</option>`
-          ).join('')}
-        </select>
-        ${!isMe ? `<button class="btn btn-danger" onclick="removeRole(${i})" style="font-size:0.75rem;padding:4px 8px">✕</button>` : ''}
+      ${pending.map(u => `
+        <div class="role-row" style="border:1px solid rgba(251,191,36,.25);background:rgba(251,191,36,.05)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="role-badge pracownik">❓ Bez roli</span>
+            <div>
+              <div style="font-size:0.88rem;font-weight:500">${u.email}</div>
+              <div style="font-size:0.7rem;color:var(--text2)">ostatnio: ${u.lastSeen}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <select class="role-select" id="pending_${u.email.replace(/[^a-z0-9]/gi,'_')}">
+              <option value="pracownik">👁 Pracownik</option>
+              <option value="dyspozytor">📋 Dyspozytor</option>
+              <option value="zastepca">🔑 Zastępca</option>
+              <option value="kierownik">👑 Kierownik</option>
+            </select>
+            <button class="btn btn-primary" onclick="assignPendingRole('${u.email}')" style="font-size:0.75rem;padding:5px 10px;white-space:nowrap">Przyznaj</button>
+          </div>
+        </div>`).join('')}
+    </div>` : '';
+
+  // Przypisane role
+  const assignedHtml = branchRoles.length > 0 ? `
+    <div style="margin-bottom:12px">
+      <div style="font-family:'Syne',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);margin-bottom:8px">
+        ✅ Przypisane role (${branchRoles.length})
       </div>
-    </div>`;
-  }).join('');
+      ${branchRoles.map((r, i) => {
+        const info = ROLE_LABELS[r.role] || ROLE_LABELS.pracownik;
+        const isMe = r.nameOrEmail.toLowerCase() === currentUser.toLowerCase();
+        const u = knownUsers.find(u => u.email.toLowerCase() === r.nameOrEmail.toLowerCase());
+        return `<div class="role-row">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="role-badge ${info.cls}">${info.label}</span>
+            <div>
+              <div style="font-size:0.88rem;font-weight:500">${r.nameOrEmail} ${isMe ? '<span style="font-size:0.7rem;color:var(--text2)">(to Ty)</span>' : ''}</div>
+              ${u ? `<div style="font-size:0.7rem;color:var(--text2)">ostatnio: ${u.lastSeen}</div>` : ''}
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <select class="role-select" onchange="changeRoleNoSave(${i}, this.value)">
+              ${['kierownik','zastepca','dyspozytor','pracownik'].map(rv =>
+                `<option value="${rv}" ${rv===r.role?'selected':''}>${ROLE_LABELS[rv].label}</option>`
+              ).join('')}
+            </select>
+            ${!isMe ? `<button class="btn btn-danger" onclick="removeRoleNoSave(${i})" style="font-size:0.75rem;padding:4px 8px">✕</button>` : ''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>` : '<div style="text-align:center;padding:20px;color:var(--text2)">Brak przypisanych ról</div>';
+
+  list.innerHTML = saHtml + pendingHtml + assignedHtml;
+}
+
+function assignPendingRole(email) {
+  const selectId = 'pending_' + email.replace(/[^a-z0-9]/gi,'_');
+  const sel = document.getElementById(selectId);
+  const role = sel ? sel.value : 'pracownik';
+  const existing = branchRoles.find(r => r.nameOrEmail.toLowerCase() === email.toLowerCase());
+  if (existing) existing.role = role;
+  else branchRoles.push({ nameOrEmail: email, role });
+  renderRolesPage();
+}
+
+function changeRoleNoSave(idx, role) {
+  if (branchRoles[idx]) { branchRoles[idx].role = role; }
+}
+
+function removeRoleNoSave(idx) {
+  branchRoles.splice(idx, 1);
+  renderRolesPage();
+}
+
+function saveRoles() {
+  spSave(true);
+  const btn = document.getElementById('saveRolesBtn');
+  if (btn) { btn.textContent = '✅ Zapisano'; setTimeout(() => { btn.textContent = '💾 Zapisz role'; }, 2000); }
 }
 
 function addRoleUser() {
@@ -1514,11 +1601,10 @@ function addRoleUser() {
   const role  = document.getElementById('newRoleType').value;
   if (!email) return;
   const exists = branchRoles.find(r => r.nameOrEmail.toLowerCase() === email.toLowerCase());
-  if (exists) { exists.role = role; }
-  else { branchRoles.push({ nameOrEmail: email, role }); }
+  if (exists) exists.role = role;
+  else branchRoles.push({ nameOrEmail: email, role });
   document.getElementById('newRoleEmail').value = '';
   renderRolesPage();
-  spSave(true);
 }
 
 function changeRole(idx, role) {
@@ -3106,16 +3192,17 @@ function syncStatusSet(state, text) {
 }
 
 function appStateToJSON() {
-  return JSON.stringify({ mechanics, entries, changeHistory, branchRoles });
+  return JSON.stringify({ mechanics, entries, changeHistory, branchRoles, knownUsers });
 }
 
 function appStateFromJSON(json) {
   try {
     const d = JSON.parse(json);
-    if (d.mechanics)    mechanics    = d.mechanics;
-    if (d.entries)      entries      = d.entries;
+    if (d.mechanics)     mechanics     = d.mechanics;
+    if (d.entries)       entries       = d.entries;
     if (d.changeHistory) changeHistory = d.changeHistory;
-    if (d.branchRoles)  branchRoles  = d.branchRoles;
+    if (d.branchRoles)   branchRoles   = d.branchRoles;
+    if (d.knownUsers)    knownUsers    = d.knownUsers;
     return true;
   } catch(err) { return false; }
 }
@@ -3261,6 +3348,7 @@ async function spLoad() {
       syncStatusSet('error', '⚠️ Brak połączenia z SharePoint');
     }
   }
+  registerKnownUser(currentUser);
   currentRole = determineRole(currentUser);
   applyRoleUI();
   showAppAfterLoad();
