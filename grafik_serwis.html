@@ -1334,17 +1334,13 @@
       <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end">
         <div>
           <label class="form-label">Numer zlecenia</label>
-          <input class="form-input" id="fOrder" placeholder="np. SV-00123" autocomplete="off" style="font-family:'DM Sans',monospace;letter-spacing:0.03em" oninput="bcClearInfo()">
+          <input class="form-input" id="fOrder" placeholder="np. ZL11/26/0153" autocomplete="off" style="font-family:'DM Sans',monospace;letter-spacing:0.03em">
         </div>
         <div>
           <label class="form-label">Priorytet</label>
           <div id="priorityPicker" style="display:flex;gap:5px"></div>
         </div>
       </div>
-      <button type="button" class="btn btn-secondary" onclick="fetchFromBC()" id="bcFetchBtn" style="margin-top:8px;font-size:0.78rem;padding:5px 12px;width:100%">
-        🔗 Pobierz dane z Business Central
-      </button>
-      <div id="bcInfo" style="display:none;margin-top:8px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);border-radius:8px;padding:10px 12px;font-size:0.82rem;line-height:1.7"></div>
     </div>
     <div class="form-group">
       <label class="form-label">Notatka (opcjonalnie)</label>
