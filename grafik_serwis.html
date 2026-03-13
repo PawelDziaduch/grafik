@@ -1099,11 +1099,6 @@
 
     <div id="branchSelectedInfo" style="display:none;margin-bottom:16px;background:rgba(255,222,0,.1);border:1px solid rgba(255,222,0,.3);border-radius:8px;padding:10px 14px;font-size:0.85rem;color:var(--jd-yellow);font-weight:600;text-align:center"></div>
 
-    <div id="localNameGroup" style="display:none;margin-bottom:12px">
-      <div style="font-size:0.75rem;color:var(--text2);margin-bottom:5px">Twoje imię (widoczne w historii)</div>
-      <input class="form-input" id="localNameInput" placeholder="np. Jan Kowalski" style="width:100%;box-sizing:border-box">
-    </div>
-
     <button class="login-btn-ms" onclick="loginWithMicrosoft()" id="loginMsBtn" disabled style="opacity:.5;cursor:not-allowed">
       <svg width="20" height="20" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
@@ -1113,12 +1108,9 @@
       </svg>
       Zaloguj przez Microsoft
     </button>
-    <button class="login-btn-local" onclick="showLocalLogin()" id="loginLocalBtn" disabled style="opacity:.5;cursor:not-allowed">
-      Pracuj lokalnie (bez zapisu do chmury)
+    <button class="login-btn-local" onclick="enterPreviewMode()" id="loginLocalBtn" disabled style="opacity:.5;cursor:not-allowed">
+      👁 Podgląd tygodnia (bez logowania)
     </button>
-    <div id="localLoginForm" style="display:none;margin-top:10px">
-      <button class="btn btn-primary" onclick="loginLocal()" style="width:100%;padding:10px">Wejdź →</button>
-    </div>
     <div class="login-info">
       Dane każdego oddziału są przechowywane osobno na SharePoint.<br>
       Wymagane konto Microsoft 365 firmy Wanicki.
@@ -1539,11 +1531,6 @@ function removeRole(idx) {
   spSave(true);
 }
 
-function showLocalLogin() {
-  document.getElementById('localNameGroup').style.display = 'block';
-  document.getElementById('localLoginForm').style.display = 'block';
-  document.getElementById('loginLocalBtn').style.display = 'none';
-}
 
 const COLORS = [
   ['#f0a500','#1a1200'],['#3b82f6','#0a1a30'],['#22c55e','#0a2010'],
@@ -3084,10 +3071,24 @@ function scheduleTokenRefresh() {
   }, msUntilRefresh);
 }
 
+function parseJwt(token) {
+  try {
+    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(base64));
+  } catch(e) { return {}; }
+}
+
 async function getToken() {
   const tok = sessionStorage.getItem('sp_token');
   const exp = parseInt(sessionStorage.getItem('sp_token_exp') || '0');
-  if (tok && exp > Date.now()) return tok;
+  if (tok && exp > Date.now()) {
+    // Ustaw currentUser z tokenu jeśli jeszcze nie ustawiony
+    if (!currentUser || currentUser === 'Lokalny') {
+      const claims = parseJwt(tok);
+      currentUser = claims.preferred_username || claims.upn || claims.email || claims.unique_name || claims.name || 'Użytkownik';
+    }
+    return tok;
+  }
   showLoginPage();
   return null;
 }
@@ -3236,6 +3237,7 @@ async function spLoad() {
   }
   const token = await getToken();
   if (!token) return;
+  console.log('[AUTH] currentUser:', currentUser);
   applyBranchTheme();
   syncStatusSet('saving', 'Wczytywanie...');
   try {
@@ -3340,21 +3342,31 @@ function loginWithMicrosoft() {
   window.location.href = loginUrl;
 }
 
-function loginLocal() {
-  if (!currentBranch) { alert('Wybierz oddział przed zalogowaniem.'); return; }
-  const nameInput = document.getElementById('localNameInput')?.value.trim();
-  currentUser = nameInput || 'Lokalny';
+function enterPreviewMode() {
+  if (!currentBranch) { alert('Wybierz oddział przed wejściem w podgląd.'); return; }
+  currentUser = 'Gość';
+  currentRole = 'pracownik';
   SP_LIST_NAME = currentBranch.listName;
   applyBranchTheme();
   hideLoginPage();
+  // Wczytaj dane z localStorage jeśli dostępne
   const local = localStorage.getItem('grafik_serwis_backup_' + currentBranch.id);
   if (local) appStateFromJSON(local);
-  currentRole = determineRole(currentUser);
   applyRoleUI();
-  showAppAfterLoad();
-  syncStatusSet('', 'Tryb lokalny — ' + currentBranch.name);
-  syncNoTripsToEntries(); syncVacationsToEntries(); ensureEntryDates(); render(); updateGeoConflicts();
-  spReady = true;
+  // Pokaż tylko header z banerem podglądu i zakładką grafiku
+  document.querySelector('header').style.display = '';
+  // Ukryj wszystkie zakładki oprócz grafiku i miesiąca
+  document.getElementById('tabMechanics').style.display = 'none';
+  document.getElementById('tabRoles').style.display = 'none';
+  document.querySelectorAll('.nav-tab[data-page="history"]').forEach(t => t.style.display = 'none');
+  // Pokaż banner z przyciskiem zaloguj
+  const banner = document.getElementById('readonlyBanner');
+  banner.classList.add('show');
+  document.getElementById('readonlyBannerText').innerHTML =
+    `👁 Tryb podglądu — ${currentBranch.name}. &nbsp;
+     <button class="btn btn-primary" onclick="showLoginPage();document.querySelector('header').style.display='none'" style="font-size:0.72rem;padding:3px 10px;margin-left:8px">🔑 Zaloguj się</button>`;
+  syncNoTripsToEntries(); ensureEntryDates(); render();
+  spReady = false; // nie zapisuj
 }
 
 // ── LOGOUT & SIDEBAR ──────────────────────────────────────────────────────────
@@ -3386,9 +3398,6 @@ function logout() {
   const localBtn = document.getElementById('loginLocalBtn');
   msBtn.disabled = true; msBtn.style.opacity = '.5'; msBtn.style.cursor = 'not-allowed';
   localBtn.disabled = true; localBtn.style.opacity = '.5'; localBtn.style.cursor = 'not-allowed';
-  document.getElementById('localNameGroup').style.display = 'none';
-  document.getElementById('localLoginForm').style.display = 'none';
-  document.getElementById('loginLocalBtn').style.display = '';
 }
 
 let sidebarCollapsed = false;
