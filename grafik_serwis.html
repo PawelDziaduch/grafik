@@ -3107,18 +3107,30 @@ async function getSiteId(token) {
 // Pobierz listId dla danej nazwy listy
 const _listIdCache = {};
 async function ensureGrafikDataColumn(token, siteId, listId) {
-  // Check if GrafikData column exists, create if not
+  // Use SharePoint REST API to create multiline text column — Graph API ma ograniczenia
   try {
+    // Sprawdź przez Graph czy kolumna istnieje
     const colsUrl = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${listId}/columns?$select=name`;
     const cols = await graphRequest('GET', colsUrl, null, token);
-    const exists = cols.value?.some(c => c.name === 'GrafikData');
-    if (!exists) {
-      await graphRequest('POST',
-        `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${listId}/columns`,
-        { name: 'GrafikData', text: { allowMultipleLines: true, maxLength: 0 } },
-        token
-      );
-    }
+    if (cols.value?.some(c => c.name === 'GrafikData')) return; // już istnieje
+    // Utwórz przez SharePoint REST
+    const restUrl = `${SP_SITE_URL}/_api/web/lists('${listId}')/fields`;
+    const resp = await fetch(restUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Accept': 'application/json;odata=nometadata',
+        'Content-Type': 'application/json;odata=nometadata',
+      },
+      body: JSON.stringify({
+        '__metadata': { 'type': 'SP.FieldMultiLineText' },
+        'FieldTypeKind': 3,
+        'Title': 'GrafikData',
+        'NumberOfLines': 100,
+        'UnlimitedLengthInDocumentLibrary': true,
+      }),
+    });
+    if (!resp.ok) console.warn('[SP] column create REST:', resp.status, await resp.text());
   } catch(e) { console.warn('[SP] ensureGrafikDataColumn:', e.message); }
 }
 
@@ -3148,21 +3160,11 @@ async function spGetItem(token) {
   try {
     const siteId = await getSiteId(token);
     const listId = await getListId(token, SP_LIST_NAME);
-    const url = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${listId}/items?$filter=fields/Title eq '${SP_ITEM_TITLE}'&$expand=fields($select=Title)&$top=1`;
+    const url = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${listId}/items?$filter=fields/Title eq '${SP_ITEM_TITLE}'&$expand=fields&$top=1`;
     const data = await graphRequest('GET', url, null, token);
     if (!data.value?.length) return null;
     const item = data.value[0];
-    try {
-      const attUrl = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${listId}/items/${item.id}/attachments`;
-      const atts = await graphRequest('GET', attUrl, null, token);
-      const att = atts.value?.find(a => a.name === 'grafik.json');
-      if (att) {
-        const resp = await fetch(att.contentUrl, { headers: { 'Authorization': 'Bearer ' + token } });
-        const GrafikData = await resp.text();
-        return { Id: item.id, GrafikData };
-      }
-    } catch(e) { console.warn('[SP] attachment read:', e.message); }
-    return { Id: item.id, GrafikData: null };
+    return { Id: item.id, GrafikData: item.fields?.GrafikData || null };
   } catch(err) {
     console.error('[SP] spGetItem error:', err);
     throw err;
@@ -3224,31 +3226,14 @@ async function spSave(manual) {
     if (!token) return;
     const siteId = await getSiteId(token);
     const listId = await getListId(token, SP_LIST_NAME);
-    let itemId;
     const existing = await spGetItem(token);
     if (existing?.Id) {
-      itemId = existing.Id;
+      const patchUrl = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${listId}/items/${existing.Id}/fields`;
+      await graphRequest('PATCH', patchUrl, { GrafikData: json }, token);
     } else {
       const postUrl = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${listId}/items`;
-      const created = await graphRequest('POST', postUrl, { fields: { Title: SP_ITEM_TITLE } }, token);
-      itemId = created.id;
+      await graphRequest('POST', postUrl, { fields: { Title: SP_ITEM_TITLE, GrafikData: json } }, token);
     }
-    // Usuń stary załącznik
-    try {
-      const attUrl = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${listId}/items/${itemId}/attachments`;
-      const atts = await graphRequest('GET', attUrl, null, token);
-      if (atts.value?.find(a => a.name === 'grafik.json')) {
-        await graphRequest('DELETE', `${attUrl}/${encodeURIComponent('grafik.json')}`, null, token);
-      }
-    } catch(e) {}
-    // Wgraj nowy załącznik
-    const uploadUrl = `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${listId}/items/${itemId}/attachments/${encodeURIComponent('grafik.json')}/$value`;
-    const uploadResp = await fetch(uploadUrl, {
-      method: 'PUT',
-      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/octet-stream' },
-      body: json,
-    });
-    if (!uploadResp.ok) throw new Error('Upload ' + uploadResp.status + ': ' + (await uploadResp.text()).slice(0,200));
     spLastSaved = json;
     const now = new Date();
     syncStatusSet('ok', 'Zapisano ' + now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0') + ' — ' + (currentBranch?.name || ''));
