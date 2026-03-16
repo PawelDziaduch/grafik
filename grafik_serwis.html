@@ -2153,11 +2153,13 @@ function renderSidebar() {
 }
 
 function renderGridNormal() {
+  const dates = getWeekDates(weekOffset);
   const mon = dates[0], sun = dates[6];
   document.getElementById('weekLabel').textContent =
     `${fmtDate(mon)} – ${fmtDate(sun)} ${sun.getFullYear()}`;
 
   const hdr = document.getElementById('gridHeader');
+  hdr.className = 'grid-header';
   hdr.innerHTML = `<div></div>` + dates.map((d,i)=>{
     const hKey = dateKey(d);
     const hName = getHolidays(d.getFullYear())[hKey] || null;
