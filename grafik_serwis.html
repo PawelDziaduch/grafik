@@ -2185,7 +2185,7 @@ function renderGridNormal() {
         ${dayEntries.map(en => {
           const isConflict = geoConflictIds.has(en.id);
           const icon = TYPES.find(t=>t.key===en.type)?.icon||'';
-          return `<div class="entry type-${en.type} ${isConflict?'conflict':''}" data-id="${en.id}" title="${isConflict?'⚠ Konflikt wyjazdu!':''}" ondblclick="openModal(${m.id},${dayIdx},'${en.id}')">
+          return `<div class="entry type-${en.type} ${isConflict?'conflict':''}" data-id="${en.id}" title="${isConflict?'⚠ Konflikt wyjazdu!':''}" ondblclick="openModal('${m.id}',${dayIdx},'${en.id}')">
             <button class="del-btn" onclick="deleteEntry('${en.id}',event)">✕</button>
             ${en.priority && en.priority!=="normal" ? `<span class="priority-dot ${en.priority}"></span>` : ""}
             <span class="entry-icon">${icon}</span>
@@ -2194,7 +2194,7 @@ function renderGridNormal() {
             ${en.note ? `<span class="entry-note">${en.note}</span>` : ''}
           </div>`;
         }).join('')}
-        <button class="add-cell-btn" onclick="openModal(${m.id},${dayIdx})">+ dodaj</button>
+        <button class="add-cell-btn" onclick="openModal('${m.id}',${dayIdx})">+ dodaj</button>
       </div>`;
     }).join('');
     return `<div class="grid-row">
@@ -2254,7 +2254,7 @@ function renderGridTransposed() {
         ${dayEntries.map(en => {
           const isConflict = geoConflictIds.has(en.id);
           const icon = TYPES.find(t => t.key === en.type)?.icon || '';
-          return `<div class="entry type-${en.type} ${isConflict ? 'conflict' : ''}" data-id="${en.id}" title="${isConflict ? '⚠ Konflikt wyjazdu!' : ''}" ondblclick="openModal(${m.id},${dayIdx},'${en.id}')">
+          return `<div class="entry type-${en.type} ${isConflict ? 'conflict' : ''}" data-id="${en.id}" title="${isConflict ? '⚠ Konflikt wyjazdu!' : ''}" ondblclick="openModal('${m.id}',${dayIdx},'${en.id}')">
             <button class="del-btn" onclick="deleteEntry('${en.id}',event)">✕</button>
             ${en.priority && en.priority !== 'normal' ? `<span class="priority-dot ${en.priority}"></span>` : ''}
             <span class="entry-icon">${icon}</span>
@@ -2263,7 +2263,7 @@ function renderGridTransposed() {
             ${en.note ? `<span class="entry-note">${en.note}</span>` : ''}
           </div>`;
         }).join('')}
-        <button class="add-cell-btn" onclick="openModal(${m.id},${dayIdx})">+ dodaj</button>
+        <button class="add-cell-btn" onclick="openModal('${m.id}',${dayIdx})">+ dodaj</button>
       </div>`;
     }).join('');
 
