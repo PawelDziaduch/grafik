@@ -218,8 +218,49 @@
   }
   .add-mech-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-  /* GRID */
-  .grid-area {
+  /* GRID TRANSPONOWANY (dni w wierszach, mechanicy w kolumnach) */
+  .grid-header.transposed {
+    grid-template-columns: 120px repeat(var(--mech-count, 7), minmax(130px, 1fr));
+  }
+  .grid-row.transposed {
+    grid-template-columns: 120px repeat(var(--mech-count, 7), minmax(130px, 1fr));
+  }
+  .row-label.day-label {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 10px 12px;
+  }
+  .row-label.day-label .day-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text2);
+  }
+  .row-label.day-label .day-date {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .row-label.day-label.today { border-color: var(--jd-yellow); background: rgba(255,222,0,0.07); }
+  .row-label.day-label.today .day-date { color: var(--jd-yellow); }
+  .row-label.day-label.holiday { border-color: rgba(167,139,250,.4); background: rgba(167,139,250,.07); }
+  .row-label.day-label.weekend { background: #161820; }
+
+  .col-header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .col-header .mech-avatar { width: 28px; height: 28px; font-size: 0.7rem; flex-shrink: 0; }
+  .col-header .mech-name { font-size: 0.78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     overflow: auto;
     background: var(--bg);
   }
@@ -1051,6 +1092,7 @@
     <div class="week-label" id="weekLabel"></div>
     <button id="nextWeek">&#8594;</button>
     <button class="btn btn-secondary" id="todayBtn" style="margin-left:4px;font-size:0.78rem;padding:5px 12px">Dziś</button>
+    <button class="btn btn-secondary" id="orientationBtn" onclick="toggleGridOrientation()" style="margin-left:4px;font-size:0.78rem;padding:5px 10px" title="Zmień orientację siatki">⇄</button>
     <button class="btn btn-secondary" id="themeToggleBtn" onclick="toggleTheme()" style="margin-left:4px;font-size:0.78rem;padding:5px 10px" title="Jasny / ciemny motyw">🌙</button>
   </div>
   <nav class="main-nav" id="mainNav">
@@ -2110,8 +2152,7 @@ function renderSidebar() {
   }).join('');
 }
 
-function renderGrid() {
-  const dates = getWeekDates(weekOffset);
+function renderGridNormal() {
   const mon = dates[0], sun = dates[6];
   document.getElementById('weekLabel').textContent =
     `${fmtDate(mon)} – ${fmtDate(sun)} ${sun.getFullYear()}`;
@@ -2167,7 +2208,95 @@ function renderGrid() {
   }).join('');
 }
 
+function renderGridTransposed() {
+  const dates = getWeekDates(weekOffset);
+  const mon = dates[0], sun = dates[6];
+  document.getElementById('weekLabel').textContent =
+    `${fmtDate(mon)} – ${fmtDate(sun)} ${sun.getFullYear()}`;
+
+  const mechCount = mechanics.length;
+  const hdr = document.getElementById('gridHeader');
+  hdr.className = 'grid-header transposed';
+  hdr.style.setProperty('--mech-count', mechCount);
+
+  // Nagłówek — pusta komórka + mechanicy w kolumnach
+  hdr.innerHTML = `<div></div>` + mechanics.map(m => {
+    const [bg, fg] = getColor(m.id);
+    return `<div class="col-header">
+      <div class="mech-avatar" style="background:${bg};color:${fg}">${initials(m.name)}</div>
+      <div class="mech-name">${m.name}</div>
+    </div>`;
+  }).join('');
+
+  const body = document.getElementById('gridBody');
+  body.style.setProperty('--mech-count', mechCount);
+
+  // Wiersze — każdy dzień tygodnia
+  body.innerHTML = dates.map((d, dayIdx) => {
+    const hKey = dateKey(d);
+    const hName = getHolidays(d.getFullYear())[hKey] || null;
+    const isHol = !!hName;
+    const isWeekend = dayIdx >= 5;
+    const isTod = isToday(d);
+
+    const dayLabelClass = ['row-label day-label', isTod ? 'today' : '', isHol ? 'holiday' : '', isWeekend ? 'weekend' : ''].filter(Boolean).join(' ');
+
+    const cells = mechanics.map(m => {
+      const dayEntries = entries.filter(en =>
+        en.mechId === m.id && en.day === dayIdx &&
+        (en.week === undefined || en.week === weekOffset)
+      );
+      const hasNoEntry = !isHol && !isWeekend && dayEntries.length === 0;
+      const classes = ['cell', isWeekend ? 'weekend' : '', isHol ? 'holiday' : '', hasNoEntry ? 'empty-workday' : ''].filter(Boolean).join(' ');
+      return `<div class="${classes}" data-mech="${m.id}" data-day="${dayIdx}" title="${hName || ''}">
+        ${dayEntries.map(en => {
+          const isConflict = geoConflictIds.has(en.id);
+          const icon = TYPES.find(t => t.key === en.type)?.icon || '';
+          return `<div class="entry type-${en.type} ${isConflict ? 'conflict' : ''}" data-id="${en.id}" title="${isConflict ? '⚠ Konflikt wyjazdu!' : ''}" ondblclick="openModal(${m.id},${dayIdx},'${en.id}')">
+            <button class="del-btn" onclick="deleteEntry('${en.id}',event)">✕</button>
+            ${en.priority && en.priority !== 'normal' ? `<span class="priority-dot ${en.priority}"></span>` : ''}
+            <span class="entry-icon">${icon}</span>
+            ${en.city ? `<span class="entry-city">${en.city}</span>` : ''}
+            ${en.order ? `<span class="entry-note" style="font-weight:600;opacity:1;color:var(--jd-yellow)">📋 ${en.order}</span>` : ''}
+            ${en.note ? `<span class="entry-note">${en.note}</span>` : ''}
+          </div>`;
+        }).join('')}
+        <button class="add-cell-btn" onclick="openModal(${m.id},${dayIdx})">+ dodaj</button>
+      </div>`;
+    }).join('');
+
+    return `<div class="grid-row transposed" style="--mech-count:${mechCount}">
+      <div class="${dayLabelClass}">
+        <div class="day-name">${DAYS_PL[dayIdx]}</div>
+        <div class="day-date">${fmtDate(d)}</div>
+        ${hName ? `<div style="font-size:0.6rem;color:#a78bfa;margin-top:2px">🎉 ${hName}</div>` : ''}
+      </div>
+      ${cells}
+    </div>`;
+  }).join('');
+}
+
 function getConflicts() { return getConflictDetails(); }
+
+let gridOrientation = localStorage.getItem('gridOrientation') || 'normal'; // 'normal' | 'transposed'
+
+function toggleGridOrientation() {
+  gridOrientation = gridOrientation === 'normal' ? 'transposed' : 'normal';
+  localStorage.setItem('gridOrientation', gridOrientation);
+  const btn = document.getElementById('orientationBtn');
+  if (btn) btn.title = gridOrientation === 'transposed' ? 'Widok: dni w wierszach' : 'Widok: mechanicy w wierszach';
+  renderGrid();
+}
+
+function renderGrid() {
+  if (gridOrientation === 'transposed') {
+    renderGridTransposed();
+  } else {
+    renderGridNormal();
+  }
+}
+
+function renderGridNormal() {
 
 // ── GEO CACHE & DISTANCE ─────────────────────────────────────────────────────
 
