@@ -2051,9 +2051,25 @@ function entryDateKey(weekOff, dayIdx) {
 
 // Ensure all entries have a stable "date" field
 function ensureEntryDates() {
+  // Krok 1: week+day → date (stary format)
   entries.forEach(en => {
     if (!en.date && en.day !== undefined && en.week !== undefined) {
       en.date = entryDateKey(en.week, en.day);
+    }
+  });
+  // Krok 2: date → week+day (nowy format z importu)
+  const baseMonday = getMonday(0);
+  entries.forEach(en => {
+    if (en.date && (en.week === undefined || en.day === undefined)) {
+      const d = new Date(en.date + 'T00:00:00');
+      const dayOfWeek = d.getDay(); // 0=niedziela
+      const dayIdx = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 0=pon, 6=niedz
+      // Oblicz weekOffset względem bieżącego poniedziałku
+      const diffMs = d.getTime() - baseMonday.getTime();
+      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+      const weekOff = Math.floor(diffDays / 7);
+      en.week = weekOff;
+      en.day  = dayIdx;
     }
   });
 }
@@ -3621,10 +3637,12 @@ function importFromExcel() {
   if (!confirm('Zaimportować dane z Excela (14 mechaników + 217 wpisów z marca 2026)?\n\nIstniejące dane zostaną zastąpione.')) return;
   mechanics = EXCEL_IMPORT.mechanics.map(m => ({...m}));
   // Zachowaj istniejące wpisy spoza marca 2026, dodaj nowe
-  entries = entries.filter(e => !e.date.startsWith('2026-03'));
+  entries = entries.filter(e => !e.date?.startsWith('2026-03'));
   entries = entries.concat(EXCEL_IMPORT.entries.map(e => ({...e})));
   changeHistory.push({ date: new Date().toISOString(), user: currentUser, role: currentRole, action: 'Import z Excela (Wola Piasecka, marzec 2026)' });
-  syncNoTripsToEntries(); ensureEntryDates(); render();
+  // Przelicz week+day dla wszystkich wpisów z datą
+  ensureEntryDates();
+  syncNoTripsToEntries(); syncVacationsToEntries(); render(); updateGeoConflicts();
   if (spReady) spSave(true);
   alert('✅ Zaimportowano pomyślnie!\n14 mechaników, 217 wpisów z marca 2026.');
 }
