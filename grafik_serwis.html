@@ -2086,7 +2086,7 @@ function renderMonthGrid() {
       isHoliday ? 'holiday-month' : ''
     ].filter(Boolean).join(' ');
 
-    return `<div class="${classes}" onclick="toggleDayExpand(this,'${d.toISOString().slice(0,10)}',${colIndex})" title="${isHoliday ? holidays[hKey] : ''}">
+    return `<div class="${classes}" onclick="toggleDayExpand(this,'${dKey}',${colIndex})" title="${isHoliday ? holidays[hKey] : ''}">
       <div class="month-cell-date">${d.getDate()}${isHoliday ? ' 🎉' : ''}</div>
       ${chips}${more}
     </div>`;
