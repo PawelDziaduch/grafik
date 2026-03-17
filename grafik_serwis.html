@@ -819,6 +819,7 @@
   #page-month {
     padding: 24px 28px;
     overflow-y: auto;
+    overflow-x: visible;
     height: calc(100vh - 57px);
   }
 
@@ -848,6 +849,7 @@
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 3px;
+    overflow: visible;
   }
 
   .month-day-header {
@@ -2115,8 +2117,14 @@ function toggleDayExpand(el, dateStr, colIndex) {
   });
 
   const byType = {wyjazd:0, praca:0, urlop:0, choroba:0};
-  dayEntries.forEach(en => { if (byType[en.type] !== undefined) byType[en.type]++; });
-  const urgentCount = dayEntries.filter(en => en.priority === 'urgent').length;
+  dayEntries.forEach(en => {
+    const t = en.type;
+    if (t === 'wyjazd' || t === 'trip')         byType.wyjazd++;
+    else if (t === 'praca' || t === 'work')      byType.praca++;
+    else if (t === 'urlop' || t === 'vacation')  byType.urlop++;
+    else if (t === 'choroba' || t === 'sick')    byType.choroba++;
+  });
+  const urgentCount = dayEntries.filter(en => en.priority === 'urgent' || en.priority === 3).length;
 
   const TYPE_COLORS = { wyjazd:'#367C2B', praca:'#FFDE00', urlop:'#f59e0b', choroba:'#ef4444' };
   const PRIO_ICONS = { low:'🟢', high:'🟠', urgent:'🔴' };
