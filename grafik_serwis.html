@@ -2754,7 +2754,8 @@ function updateCityVisibility() {
 
 async function checkConflictWarn() {
   if (selectedType!=='wyjazd') { document.getElementById('conflictWarn').classList.remove('show'); return; }
-  const mechId = parseInt(document.getElementById('fMech').value);
+  const mechIdRaw = document.getElementById('fMech').value;
+  const mechId = isNaN(mechIdRaw) || mechIdRaw === '' ? mechIdRaw : parseInt(mechIdRaw);
   const day = parseInt(document.getElementById('fDay').value);
   const city = document.getElementById('fCity').value.trim();
   if (!city) { document.getElementById('conflictWarn').classList.remove('show'); return; }
@@ -2818,7 +2819,8 @@ function closeModal() {
 
 function saveEntry() {
   if (!can('editEntries')) { alert('Nie masz uprawnień do edycji wpisów.'); return; }
-  const mechId = parseInt(document.getElementById('fMech').value);
+  const mechIdRaw = document.getElementById('fMech').value;
+  const mechId = isNaN(mechIdRaw) || mechIdRaw === '' ? mechIdRaw : parseInt(mechIdRaw);
   const day    = parseInt(document.getElementById('fDay').value);
   const city   = document.getElementById('fCity').value.trim();
   const cityLat= document.getElementById('fCityLat').value;
@@ -2901,8 +2903,7 @@ function saveMech() {
   const name = document.getElementById('mName').value.trim();
   if (!name) return;
   const spec = document.getElementById('mSpec').value.trim() || 'Mechanik';
-  const ids = mechanics.map(m=>m.id);
-  const newId = ids.length ? Math.max(...ids)+1 : 1;
+  const newId = 'mech_' + Date.now();
   mechanics.push({id:newId, name, spec, phone:'', email:'', note:'', vacations:[]});
   logHistory('mech_add', {mechName: name, spec});
   closeMechModal();
@@ -3263,8 +3264,7 @@ function saveEditMech() {
       logHistory('mech_edit', {mechName: name, spec, prev: wasName});
     }
   } else {
-    const ids = mechanics.map(m => m.id);
-    const newId = ids.length ? Math.max(...ids) + 1 : 1;
+    const newId = 'mech_' + Date.now();
     mechanics.push({id: newId, name, spec, noTrips, phone, email, note, vacations});
     logHistory('mech_add', {mechName: name, spec});
   }
