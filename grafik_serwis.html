@@ -2171,6 +2171,13 @@ document.addEventListener('click', function(e) {
 });
 
 function goToWeekOfDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const mon = getMonday(0);
+  const diffMs = d - mon;
+  const diffDays = Math.floor(diffMs / 86400000);
+  weekOffset = Math.floor(diffDays / 7);
+  switchPage('schedule');
+}
 
 // ── POLISH HOLIDAYS ──────────────────────────────────────────────────────────
 
