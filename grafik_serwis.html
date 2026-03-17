@@ -1184,6 +1184,7 @@
     <span id="currentUserBadge" class="role-badge" style="display:none"></span>
     <div id="syncStatus" class="sync-status"><span id="syncIcon">&#x23F3;</span><span id="syncText">Inicjalizacja...</span></div>
     <button class="btn btn-secondary" onclick="spSave(true)" title="Zapisz teraz" style="font-size:0.75rem;padding:4px 9px" id="btnSaveManual">&#x1F4BE;</button>
+    <button class="btn btn-danger" onclick="clearAllEntries()" title="Wyczyść wszystkie wpisy" id="btnClearEntries" style="font-size:0.75rem;padding:4px 9px;display:none">🗑 Wyczyść wpisy</button>
     <button class="btn btn-secondary" id="addMechBtn">+ Mechanik</button>
     <button class="btn btn-primary" id="addEntryBtn">+ Wpis</button>
     <button class="btn btn-secondary" onclick="logout()" title="Wyloguj" style="font-size:0.75rem;padding:4px 9px">🚪</button>
@@ -1585,6 +1586,9 @@ function applyRoleUI() {
     const canImport = currentRole === 'superadmin' || currentRole === 'kierownik';
     importBtn.style.setProperty('display', canImport ? 'inline-flex' : 'none', 'important');
   }
+  // Wyczyść wpisy — tylko superadmin
+  const clearBtn = document.getElementById('btnClearEntries');
+  if (clearBtn) clearBtn.style.display = currentRole === 'superadmin' ? 'inline-flex' : 'none';
   // Show/hide Mechanicy tab
   const tabMech = document.getElementById('tabMechanics');
   if (tabMech) tabMech.style.display = perms.editMechanics ? '' : 'none';
@@ -3925,6 +3929,15 @@ function toggleSidebar() {
 
 // ── EXCEL IMPORT DATA (Wola Piasecka, marzec 2026) ───────────────────────────
 
+
+function clearAllEntries() {
+  if (currentRole !== 'superadmin') { alert('Tylko Super Admin może wyczyścić wszystkie wpisy.'); return; }
+  if (!confirm('Usunąć WSZYSTKIE wpisy?\n\nMechanicy pozostaną. Tej operacji nie można cofnąć.')) return;
+  entries = [];
+  changeHistory.push({ date: new Date().toISOString(), user: currentUser, role: currentRole, action: 'Wyczyszczono wszystkie wpisy' });
+  render(); updateGeoConflicts();
+  if (spReady) spSave(true);
+}
 
 // ── INIT ───────────────────────────────────────────────────────────────────────
 
