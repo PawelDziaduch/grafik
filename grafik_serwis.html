@@ -1187,7 +1187,6 @@
     <div id="syncStatus" class="sync-status"><span id="syncIcon">&#x23F3;</span><span id="syncText">Inicjalizacja...</span></div>
     <button class="btn btn-secondary" onclick="spSave(true)" title="Zapisz teraz" style="font-size:0.75rem;padding:4px 9px" id="btnSaveManual">&#x1F4BE;</button>
     <button class="btn btn-danger" onclick="clearAllEntries()" title="Wyczyść wszystkie wpisy" id="btnClearEntries" style="font-size:0.75rem;padding:4px 9px;display:none">🗑 Wyczyść wpisy</button>
-    <button class="btn btn-secondary" id="addMechBtn">+ Mechanik</button>
     <button class="btn btn-primary" id="addEntryBtn">+ Wpis</button>
     <button class="btn btn-secondary" onclick="logout()" title="Wyloguj" style="font-size:0.75rem;padding:4px 9px">🚪</button>
   </div>
@@ -1286,7 +1285,7 @@
     <div class="sidebar-content">
       <div class="sidebar-title">Mechanicy</div>
       <div id="mechList"></div>
-      <button class="add-mech-btn" id="addMechSidebar">+ Dodaj mechanika</button>
+
     </div>
   </div>
 
@@ -1511,7 +1510,7 @@ const DAYS_FULL = ['Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobot
 // ── ROLE SYSTEM ───────────────────────────────────────────────────────────────
 // Roles: superadmin | kierownik | zastepca | dyspozytor | pracownik
 
-const SUPER_ADMINS = ['pawel.dziaduch@wanicki.pl'];
+const SUPER_ADMINS = ['pawel.dziaduch@wanicki.pl', 'admin@wanicki.pl'];
 
 let branchRoles = [];
 let currentRole = 'pracownik';
@@ -1573,30 +1572,31 @@ function applyRoleUI() {
   } else {
     banner.classList.remove('show');
   }
+  const isSA = currentRole === 'superadmin';
   // Hide/show add buttons
   const addEntry = document.getElementById('addEntryBtn');
   const addMech  = document.getElementById('addMechBtn');
   const addMechSidebar = document.getElementById('addMechSidebar');
   const saveBtn  = document.getElementById('btnSaveManual');
-  if (addEntry) addEntry.style.display = perms.editEntries ? '' : 'none';
-  if (addMech)  addMech.style.display  = perms.editMechanics ? '' : 'none';
-  if (addMechSidebar) addMechSidebar.style.display = perms.editMechanics ? '' : 'none';
-  if (saveBtn)  saveBtn.style.display  = perms.editEntries ? '' : 'none';
+  if (addEntry) addEntry.style.display = (perms.editEntries  || isSA) ? '' : 'none';
+  if (addMech)  addMech.style.display  = (perms.editMechanics|| isSA) ? '' : 'none';
+  if (addMechSidebar) addMechSidebar.style.display = (perms.editMechanics || isSA) ? '' : 'none';
+  if (saveBtn)  saveBtn.style.display  = (perms.editEntries  || isSA) ? '' : 'none';
   // Import Excel — tylko superadmin i kierownik
   const importBtn = document.getElementById('btnImportExcel');
   if (importBtn) {
-    const canImport = currentRole === 'superadmin' || currentRole === 'kierownik';
+    const canImport = isSA || currentRole === 'kierownik';
     importBtn.style.setProperty('display', canImport ? 'inline-flex' : 'none', 'important');
   }
   // Wyczyść wpisy — tylko superadmin
   const clearBtn = document.getElementById('btnClearEntries');
-  if (clearBtn) clearBtn.style.display = currentRole === 'superadmin' ? 'inline-flex' : 'none';
+  if (clearBtn) clearBtn.style.display = isSA ? 'inline-flex' : 'none';
   // Show/hide Mechanicy tab
   const tabMech = document.getElementById('tabMechanics');
-  if (tabMech) tabMech.style.display = perms.editMechanics ? '' : 'none';
+  if (tabMech) tabMech.style.display = (perms.editMechanics || isSA) ? '' : 'none';
   // Show/hide Role tab
   const tabRoles = document.getElementById('tabRoles');
-  if (tabRoles) tabRoles.style.display = perms.manageRoles ? '' : 'none';
+  if (tabRoles) tabRoles.style.display = (perms.manageRoles || isSA) ? '' : 'none';
 }
 
 // ── ROLES PAGE ────────────────────────────────────────────────────────────────
@@ -3079,8 +3079,8 @@ let currentPage = 'schedule';
 
 function switchPage(page) {
   // Permission guard
-  if (page === 'mechanics' && !can('editMechanics')) return;
-  if (page === 'roles'     && !can('manageRoles'))   return;
+  if (page === 'mechanics' && !can('editMechanics') && currentRole !== 'superadmin') return;
+  if (page === 'roles'     && !can('manageRoles')   && currentRole !== 'superadmin') return;
 
   currentPage = page;
   const pages = ['schedule','month','mechanics','history','roles'];
