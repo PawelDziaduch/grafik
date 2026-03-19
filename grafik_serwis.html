@@ -3068,7 +3068,7 @@ function renderMechCards() {
         ondragstart="dragStart(event,${idx})" ondragover="dragOver(event,${idx})" ondrop="dragDrop(event,${idx})" ondragleave="dragLeave(event)">
       <span class="drag-handle" title="Przeciągnij">⠿</span>
       <div class="mech-card-actions">
-        <button class="btn btn-secondary" style="font-size:0.75rem;padding:4px 10px" onclick="openEditMechModal(${m.id})">✏️ Edytuj</button>
+        <button class="btn btn-secondary" style="font-size:0.75rem;padding:4px 10px" onclick="openEditMechModal('${m.id}')">✏️ Edytuj</button>
       </div>
       <div class="mech-card-header">
         <div class="mech-card-avatar" style="background:${bg};color:${fg}">${initials(m.name)}</div>
