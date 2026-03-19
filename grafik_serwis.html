@@ -2568,6 +2568,7 @@ async function updateGeoConflicts() {
     for (let j=i+1; j<trips.length; j++) {
       const a = trips[i], b = trips[j];
       if (a.day !== b.day) continue;
+      if (a.mechId === b.mechId) continue; // ten sam mechanik — nie konflikt
       const gA = geoCache[a.city.toLowerCase().trim()];
       const gB = geoCache[b.city.toLowerCase().trim()];
       let conflict = false;
