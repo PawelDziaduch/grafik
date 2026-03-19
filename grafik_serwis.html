@@ -725,83 +725,11 @@
   .priority-dot.high   { background: #f59e0b; }
   .priority-dot.urgent { background: #ef4444; box-shadow: 0 0 5px #ef4444; }
 
-  /* Priority full-background coloring on entries in weekly view */
-  .entry.priority-low    { background: rgba(34,197,94,.18)   !important; border-left-color: #22c55e !important; color: #86efac !important; }
-  .entry.priority-high   { background: rgba(245,158,11,.22)  !important; border-left-color: #f59e0b !important; color: #fcd34d !important; }
-  .entry.priority-urgent { background: rgba(239,68,68,.28)   !important; border-left-color: #ef4444 !important; color: #fca5a5 !important; animation: urgentPulse 2s ease-in-out infinite; }
+  .entry.priority-low    { background: rgba(34,197,94,.18)  !important; border-left-color: #22c55e !important; color: #86efac !important; }
+  .entry.priority-high   { background: rgba(245,158,11,.22) !important; border-left-color: #f59e0b !important; color: #fcd34d !important; }
+  .entry.priority-urgent { background: rgba(239,68,68,.28)  !important; border-left-color: #ef4444 !important; color: #fca5a5 !important; animation: urgentPulse 2s ease-in-out infinite; }
   @keyframes urgentPulse { 0%,100% { box-shadow: 0 0 0 1px rgba(239,68,68,.3); } 50% { box-shadow: 0 0 0 2px rgba(239,68,68,.6); } }
-
   .priority-icon { font-size: 0.7rem; margin-right: 3px; line-height: 1; }
-
-  /* Month cell expand inline */
-  .month-cell { position: relative; }
-  .month-cell-expanded {
-    grid-column: span 1;
-    z-index: 20;
-  }
-  .month-expand-panel {
-    display: none;
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    width: 280px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    box-shadow: 0 12px 40px rgba(0,0,0,.5);
-    z-index: 50;
-    overflow: hidden;
-  }
-  .month-cell-expanded .month-expand-panel { display: block; }
-  /* Push right-edge panels to the left */
-  .month-expand-panel.align-right { left: auto; right: 0; }
-  .month-expand-panel-header {
-    padding: 10px 14px 8px;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .month-expand-panel-title {
-    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.82rem; color: var(--text);
-  }
-  .month-expand-panel-close {
-    background: none; border: none; color: var(--text2); cursor: pointer;
-    font-size: 0.85rem; padding: 2px 5px; border-radius: 4px; line-height: 1;
-  }
-  .month-expand-panel-close:hover { color: var(--text); background: var(--surface2); }
-  .month-expand-panel-stats {
-    display: grid; grid-template-columns: repeat(4,1fr);
-    gap: 4px; padding: 8px 10px; border-bottom: 1px solid var(--border);
-  }
-  .month-expand-stat {
-    text-align: center; background: var(--surface2); border-radius: 6px; padding: 5px 3px;
-  }
-  .month-expand-stat-num {
-    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem;
-  }
-  .month-expand-stat-label { font-size: 0.58rem; color: var(--text2); margin-top: 1px; }
-  .month-expand-list { padding: 6px 8px 8px; max-height: 240px; overflow-y: auto; }
-  .month-expand-entry {
-    display: flex; align-items: center; gap: 7px;
-    padding: 6px 8px; border-radius: 7px; margin-bottom: 3px;
-    cursor: pointer; transition: background .12s;
-  }
-  .month-expand-entry:hover { background: var(--surface2); }
-  .month-expand-avatar {
-    width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
-    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.6rem;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .month-expand-info { flex: 1; min-width: 0; }
-  .month-expand-name { font-size: 0.75rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .month-expand-detail { font-size: 0.67rem; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .month-expand-type-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-  .month-expand-goto {
-    display: block; width: calc(100% - 16px); margin: 0 8px 8px;
-    padding: 6px; background: var(--surface2); border: 1px solid var(--border);
-    color: var(--text2); border-radius: 7px; font-size: 0.72rem; font-family: 'DM Sans', sans-serif;
-    cursor: pointer; text-align: center; transition: all .15s;
-  }
-  .month-expand-goto:hover { border-color: var(--jd-yellow); color: var(--jd-yellow); }
 
   .sync-status {
     display: flex; align-items: center; gap: 5px;
@@ -819,7 +747,6 @@
   #page-month {
     padding: 24px 28px;
     overflow-y: auto;
-    overflow-x: visible;
     height: calc(100vh - 57px);
   }
 
@@ -849,7 +776,6 @@
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 3px;
-    overflow: visible;
   }
 
   .month-day-header {
@@ -1092,6 +1018,36 @@
     line-height: 1.5;
   }
 
+  /* Month expand inline */
+  .month-cell { position: relative; }
+  .month-expand-panel {
+    display: none; position: absolute; top: calc(100% + 4px); left: 0;
+    width: 280px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.5); z-index: 50; overflow: hidden;
+  }
+  .month-cell-expanded .month-expand-panel { display: block; }
+  .month-expand-panel.align-right { left: auto; right: 0; }
+  .month-grid { overflow: visible; }
+  #page-month { overflow-x: visible; }
+  .month-expand-panel-header { padding: 10px 14px 8px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .month-expand-panel-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.82rem; color: var(--text); }
+  .month-expand-panel-close { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 0.85rem; padding: 2px 5px; border-radius: 4px; }
+  .month-expand-panel-close:hover { color: var(--text); background: var(--surface2); }
+  .month-expand-panel-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  .month-expand-stat { text-align: center; background: var(--surface2); border-radius: 6px; padding: 5px 3px; }
+  .month-expand-stat-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem; }
+  .month-expand-stat-label { font-size: 0.58rem; color: var(--text2); margin-top: 1px; }
+  .month-expand-list { padding: 6px 8px 8px; max-height: 240px; overflow-y: auto; }
+  .month-expand-entry { display: flex; align-items: center; gap: 7px; padding: 6px 8px; border-radius: 7px; margin-bottom: 3px; cursor: pointer; transition: background .12s; }
+  .month-expand-entry:hover { background: var(--surface2); }
+  .month-expand-avatar { width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.6rem; display: flex; align-items: center; justify-content: center; }
+  .month-expand-info { flex: 1; min-width: 0; }
+  .month-expand-name { font-size: 0.75rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .month-expand-detail { font-size: 0.67rem; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .month-expand-type-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .month-expand-goto { display: block; width: calc(100% - 16px); margin: 0 8px 8px; padding: 6px; background: var(--surface2); border: 1px solid var(--border); color: var(--text2); border-radius: 7px; font-size: 0.72rem; font-family: 'DM Sans', sans-serif; cursor: pointer; text-align: center; transition: all .15s; }
+  .month-expand-goto:hover { border-color: var(--jd-yellow); color: var(--jd-yellow); }
+
   /* SCROLLBAR */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -1186,7 +1142,8 @@
     <span id="currentUserBadge" class="role-badge" style="display:none"></span>
     <div id="syncStatus" class="sync-status"><span id="syncIcon">&#x23F3;</span><span id="syncText">Inicjalizacja...</span></div>
     <button class="btn btn-secondary" onclick="spSave(true)" title="Zapisz teraz" style="font-size:0.75rem;padding:4px 9px" id="btnSaveManual">&#x1F4BE;</button>
-    <button class="btn btn-danger" onclick="clearAllEntries()" title="Wyczyść wszystkie wpisy" id="btnClearEntries" style="font-size:0.75rem;padding:4px 9px;display:none">🗑 Wyczyść wpisy</button>
+    <button class="btn btn-danger" onclick="clearAllEntries()" id="btnClearEntries" style="font-size:0.75rem;padding:4px 9px;display:none">🗑 Wyczyść wpisy</button>
+    <button class="btn btn-secondary" id="addMechBtn">+ Mechanik</button>
     <button class="btn btn-primary" id="addEntryBtn">+ Wpis</button>
     <button class="btn btn-secondary" onclick="logout()" title="Wyloguj" style="font-size:0.75rem;padding:4px 9px">🚪</button>
   </div>
@@ -1285,7 +1242,7 @@
     <div class="sidebar-content">
       <div class="sidebar-title">Mechanicy</div>
       <div id="mechList"></div>
-
+      <button class="add-mech-btn" id="addMechSidebar">+ Dodaj mechanika</button>
     </div>
   </div>
 
@@ -1475,7 +1432,7 @@
   </div>
 </div>
 
-
+<!-- MODAL DODAJ MECHANIKA -->
 <div class="modal-overlay" id="mechModalOverlay">
   <div class="modal">
     <h3>Nowy mechanik</h3>
@@ -1572,31 +1529,30 @@ function applyRoleUI() {
   } else {
     banner.classList.remove('show');
   }
-  const isSA = currentRole === 'superadmin';
   // Hide/show add buttons
   const addEntry = document.getElementById('addEntryBtn');
   const addMech  = document.getElementById('addMechBtn');
   const addMechSidebar = document.getElementById('addMechSidebar');
   const saveBtn  = document.getElementById('btnSaveManual');
-  if (addEntry) addEntry.style.display = (perms.editEntries  || isSA) ? '' : 'none';
-  if (addMech)  addMech.style.display  = (perms.editMechanics|| isSA) ? '' : 'none';
-  if (addMechSidebar) addMechSidebar.style.display = (perms.editMechanics || isSA) ? '' : 'none';
-  if (saveBtn)  saveBtn.style.display  = (perms.editEntries  || isSA) ? '' : 'none';
+  if (addEntry) addEntry.style.display = perms.editEntries ? '' : 'none';
+  if (addMech)  addMech.style.display  = perms.editMechanics ? '' : 'none';
+  if (addMechSidebar) addMechSidebar.style.display = perms.editMechanics ? '' : 'none';
+  if (saveBtn)  saveBtn.style.display  = perms.editEntries ? '' : 'none';
+  // Wyczyść wpisy — tylko superadmin
+  const clearBtn = document.getElementById('btnClearEntries');
+  if (clearBtn) clearBtn.style.display = currentRole === 'superadmin' ? 'inline-flex' : 'none';
   // Import Excel — tylko superadmin i kierownik
   const importBtn = document.getElementById('btnImportExcel');
   if (importBtn) {
-    const canImport = isSA || currentRole === 'kierownik';
+    const canImport = currentRole === 'superadmin' || currentRole === 'kierownik';
     importBtn.style.setProperty('display', canImport ? 'inline-flex' : 'none', 'important');
   }
-  // Wyczyść wpisy — tylko superadmin
-  const clearBtn = document.getElementById('btnClearEntries');
-  if (clearBtn) clearBtn.style.display = isSA ? 'inline-flex' : 'none';
   // Show/hide Mechanicy tab
   const tabMech = document.getElementById('tabMechanics');
-  if (tabMech) tabMech.style.display = (perms.editMechanics || isSA) ? '' : 'none';
+  if (tabMech) tabMech.style.display = perms.editMechanics ? '' : 'none';
   // Show/hide Role tab
   const tabRoles = document.getElementById('tabRoles');
-  if (tabRoles) tabRoles.style.display = (perms.manageRoles || isSA) ? '' : 'none';
+  if (tabRoles) tabRoles.style.display = perms.manageRoles ? '' : 'none';
 }
 
 // ── ROLES PAGE ────────────────────────────────────────────────────────────────
@@ -2094,41 +2050,30 @@ function renderMonthGrid() {
 }
 
 function toggleDayExpand(el, dateStr, colIndex) {
-  // Close any other open expand panels
-  document.querySelectorAll('.month-cell-expanded').forEach(c => {
-    if (c !== el) c.classList.remove('month-cell-expanded');
-  });
-
+  document.querySelectorAll('.month-cell-expanded').forEach(c => { if (c !== el) c.classList.remove('month-cell-expanded'); });
   const alreadyOpen = el.classList.contains('month-cell-expanded');
   el.classList.toggle('month-cell-expanded');
   if (alreadyOpen) return;
-
-  // Build panel content
   const d = new Date(dateStr + 'T00:00:00');
-  const hKey = dateKey(d);
-  const holidays = getHolidays(d.getFullYear());
-  const holidayName = holidays[hKey] || null;
+  const hKey = dateStr;
+  const holidayName = getHolidays(d.getFullYear())[hKey] || null;
   const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-  const DAYS_FULL = ['Niedziela','Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota'];
-
+  const DAYS_FULL2 = ['Niedziela','Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota'];
   const dayEntries = entries.filter(en => {
     if (en.date) return en.date === hKey;
     return entryDateKey(en.week || 0, en.day) === hKey;
   });
-
   const byType = {wyjazd:0, praca:0, urlop:0, choroba:0};
   dayEntries.forEach(en => {
     const t = en.type;
-    if (t === 'wyjazd' || t === 'trip')         byType.wyjazd++;
-    else if (t === 'praca' || t === 'work')      byType.praca++;
-    else if (t === 'urlop' || t === 'vacation')  byType.urlop++;
-    else if (t === 'choroba' || t === 'sick')    byType.choroba++;
+    if (t==='wyjazd'||t==='trip') byType.wyjazd++;
+    else if (t==='praca'||t==='work') byType.praca++;
+    else if (t==='urlop'||t==='vacation') byType.urlop++;
+    else if (t==='choroba'||t==='sick') byType.choroba++;
   });
-  const urgentCount = dayEntries.filter(en => en.priority === 'urgent' || en.priority === 3).length;
-
-  const TYPE_COLORS = { wyjazd:'#367C2B', praca:'#FFDE00', urlop:'#f59e0b', choroba:'#ef4444' };
+  const urgentCount = dayEntries.filter(en => en.priority === 'urgent').length;
+  const TYPE_COLORS = { wyjazd:'#367C2B', praca:'#FFDE00', urlop:'#f59e0b', choroba:'#ef4444', trip:'#367C2B', vacation:'#f59e0b', sick:'#ef4444' };
   const PRIO_ICONS = { low:'🟢', high:'🟠', urgent:'🔴' };
-
   let entriesHtml = '';
   if (dayEntries.length === 0) {
     entriesHtml = `<div style="text-align:center;padding:12px 8px;font-size:0.75rem;color:var(--text2)">📭 Brak wpisów</div>`;
@@ -2138,26 +2083,23 @@ function toggleDayExpand(el, dateStr, colIndex) {
       if (!m) return;
       const [bg, fg] = getColor(m.id);
       const pIcon = PRIO_ICONS[en.priority] || '';
-      const detail = [en.city ? `📍 ${en.city}` : '', en.order ? `📋 ${en.order}` : '', en.note || ''].filter(Boolean).join(' · ');
+      const detail = [en.city ? `📍 ${en.city}` : '', en.order ? `📋 ${en.order}` : '', en.note||''].filter(Boolean).join(' · ');
       entriesHtml += `<div class="month-expand-entry" onclick="closeAllExpand();goToWeekOfDate('${dateStr}')">
         <div class="month-expand-type-dot" style="background:${TYPE_COLORS[en.type]||'#888'}"></div>
         <div class="month-expand-avatar" style="background:${bg};color:${fg}">${initials(m.name)}</div>
         <div class="month-expand-info">
           <div class="month-expand-name">${pIcon ? pIcon+' ':''} ${m.name.split(' ')[0]}</div>
-          <div class="month-expand-detail">${detail || en.type}</div>
+          <div class="month-expand-detail">${detail||en.type}</div>
         </div>
       </div>`;
     });
   }
-
-  // Align panel: if column is in last 2 of 7, align right
   const alignRight = colIndex >= 5;
-
   const panel = el.querySelector('.month-expand-panel') || document.createElement('div');
-  panel.className = `month-expand-panel${alignRight ? ' align-right' : ''}`;
+  panel.className = `month-expand-panel${alignRight?' align-right':''}`;
   panel.innerHTML = `
     <div class="month-expand-panel-header">
-      <div class="month-expand-panel-title">${DAYS_FULL[d.getDay()]} ${d.getDate()}${holidayName ? ' 🎉' : isWeekend ? ' 🏖' : ''}</div>
+      <div class="month-expand-panel-title">${DAYS_FULL2[d.getDay()]} ${d.getDate()}${holidayName?' 🎉':isWeekend?' 🏖':''}</div>
       <button class="month-expand-panel-close" onclick="event.stopPropagation();closeAllExpand()">✕</button>
     </div>
     <div class="month-expand-panel-stats">
@@ -2176,7 +2118,6 @@ function closeAllExpand() {
   document.querySelectorAll('.month-cell-expanded').forEach(c => c.classList.remove('month-cell-expanded'));
 }
 
-// Close expand when clicking outside
 document.addEventListener('click', function(e) {
   if (!e.target.closest('.month-cell')) closeAllExpand();
 });
@@ -2359,7 +2300,7 @@ function renderGridNormal() {
           const icon = TYPES.find(t=>t.key===en.type)?.icon||'';
           const prioIcon = {low:'🟢',high:'🟠',urgent:'🔴'}[en.priority] || '';
           const prioClass = en.priority && en.priority!=='normal' ? `priority-${en.priority}` : '';
-          return `<div class="entry type-${en.type} ${isConflict?'conflict':''} ${prioClass}" data-id="${en.id}" title="${isConflict?'⚠ Konflikt wyjazdu!':en.priority==='urgent'?'🔴 PILNE':''}${en.priority==='high'?' 🟠 Wysoki priorytet':''}" ondblclick="openModal('${m.id}',${dayIdx},'${en.id}')">
+          return `<div class="entry type-${en.type} ${isConflict?'conflict':''} ${prioClass}" data-id="${en.id}" title="${isConflict?'⚠ Konflikt wyjazdu!':en.priority==='urgent'?'🔴 PILNE':en.priority==='high'?'🟠 Wysoki':''}" ondblclick="openModal('${m.id}',${dayIdx},'${en.id}')">
             <button class="del-btn" onclick="deleteEntry('${en.id}',event)">✕</button>
             ${prioIcon ? `<span class="priority-icon">${prioIcon}</span>` : ''}
             <span class="entry-icon">${icon}</span>
@@ -2428,11 +2369,11 @@ function renderGridTransposed() {
         ${dayEntries.map(en => {
           const isConflict = geoConflictIds.has(en.id);
           const icon = TYPES.find(t => t.key === en.type)?.icon || '';
-          const prioIcon = {low:'🟢',high:'🟠',urgent:'🔴'}[en.priority] || '';
-          const prioClass = en.priority && en.priority!=='normal' ? `priority-${en.priority}` : '';
-          return `<div class="entry type-${en.type} ${isConflict ? 'conflict' : ''} ${prioClass}" data-id="${en.id}" title="${isConflict ? '⚠ Konflikt wyjazdu!' : en.priority==='urgent'?'🔴 PILNE':en.priority==='high'?'🟠 Wysoki priorytet':''}" ondblclick="openModal('${m.id}',${dayIdx},'${en.id}')">
+          const prioIcon2 = {low:'🟢',high:'🟠',urgent:'🔴'}[en.priority] || '';
+          const prioClass2 = en.priority && en.priority!=='normal' ? `priority-${en.priority}` : '';
+          return `<div class="entry type-${en.type} ${isConflict ? 'conflict' : ''} ${prioClass2}" data-id="${en.id}" title="${isConflict ? '⚠ Konflikt wyjazdu!' : en.priority==='urgent'?'🔴 PILNE':en.priority==='high'?'🟠 Wysoki':''}" ondblclick="openModal('${m.id}',${dayIdx},'${en.id}')">
             <button class="del-btn" onclick="deleteEntry('${en.id}',event)">✕</button>
-            ${prioIcon ? `<span class="priority-icon">${prioIcon}</span>` : ''}
+            ${prioIcon2 ? `<span class="priority-icon">${prioIcon2}</span>` : ''}
             <span class="entry-icon">${icon}</span>
             ${en.city ? `<span class="entry-city">${en.city}</span>` : ''}
             ${en.order ? `<span class="entry-note" style="font-weight:600;opacity:1;color:var(--jd-yellow)">📋 ${en.order}</span>` : ''}
@@ -3079,8 +3020,8 @@ let currentPage = 'schedule';
 
 function switchPage(page) {
   // Permission guard
-  if (page === 'mechanics' && !can('editMechanics') && currentRole !== 'superadmin') return;
-  if (page === 'roles'     && !can('manageRoles')   && currentRole !== 'superadmin') return;
+  if (page === 'mechanics' && !can('editMechanics')) return;
+  if (page === 'roles'     && !can('manageRoles'))   return;
 
   currentPage = page;
   const pages = ['schedule','month','mechanics','history','roles'];
